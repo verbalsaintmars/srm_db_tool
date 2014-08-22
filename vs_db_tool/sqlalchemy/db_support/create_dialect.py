@@ -51,9 +51,7 @@ class CreateDialect(object):
         this.LANG = None
 
     def GenMsSqlUrl(this, a_dsn):
-        this.url = UrlGenerator(this).GenUrl(1, a_dsn)
-        # print(this.url)
-        return this.url
+        return  UrlGenerator(this).GenUrl(1, a_dsn)
 
     def GenOracleUrl(this, a_dsn = None): pass
 
@@ -128,7 +126,7 @@ class CreateDialect(object):
         this.DB = "SRM"
         this.LANG = "eng"
         """
-        this.GenUrlMap[this.dbtype](this, a_dsn)
+        return this.GenUrlMap[this.dbtype](this, a_dsn)
 
 
     __slots__ = \

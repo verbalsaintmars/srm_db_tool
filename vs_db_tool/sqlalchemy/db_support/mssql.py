@@ -30,7 +30,7 @@ class MsSql(cd.CreateDialect):
         """
         super(MsSql, this).__init__(this.db_type, this.driver)
 
-    def __call__(this, a_params)
+    def __call__(this, a_params):
 
         engine = engine_base.Engine()
         engine.ECHO = True
@@ -46,8 +46,9 @@ class MsSql(cd.CreateDialect):
             engine.URL = this.GenUrl(True)
         else:
             this.HOST = a_params.HOST
-            this.PORT = a_params.PORT
+            this.PORT = "1433" if not a_params.PORT else a_params.PORT
             engine.URL = this.GenUrl(False)
+            print(engine.URL)
 
         return engine.GetEngine()
 

@@ -1,6 +1,3 @@
-"""
-TODO: 1. generate URL
-"""
 class UrlGenerator(object):
     dbtype = {1 : "mssql" , 2 : "oracle", 3 : "sqlite", 4 : "postgresql"}
 
@@ -18,8 +15,6 @@ class UrlGenerator(object):
         this.url += "?LANGUAGE=" + this.cd.LANG if this.cd.DB and this.cd.LANG else \
             "/?LANGUAGE=" + this.cd.LANG if this.cd.LANG else ""
         return this.url
-
-
 
 
 class CreateDialect(object):

@@ -1,7 +1,3 @@
-"""
-TODO: 1. derive from CreateDialect class
-"""
-
 from . import create_dialect as cd
 from . import base as engine_base
 

@@ -48,7 +48,6 @@ class MsSql(cd.CreateDialect):
             this.HOST = a_params.HOST
             this.PORT = "1433" if not a_params.PORT else a_params.PORT
             engine.URL = this.GenUrl(False)
-            print(engine.URL)
 
         return engine.GetEngine()
 

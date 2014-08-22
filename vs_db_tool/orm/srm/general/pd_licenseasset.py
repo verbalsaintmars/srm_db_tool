@@ -34,8 +34,6 @@ class pd_licenseasset(OrmBase):
     waseelicensed = Column(Integer)
 
     def __repr__(this):
-        print(type(this.mo_id))
-        print(this.mo_id.__len__())
         return this.repr_format.format(
             db_id = this.db_id,
             mo_id = this.mo_id if this.mo_id.__len__() != 0 else this.no_value,

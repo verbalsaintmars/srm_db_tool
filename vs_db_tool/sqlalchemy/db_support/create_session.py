@@ -7,7 +7,6 @@ class Session(object):
 
     def __call__(this):
         if not this.session:
-            print("here!!")
             this.session = sessionmaker(bind = this.engine)
 
         return this.session()

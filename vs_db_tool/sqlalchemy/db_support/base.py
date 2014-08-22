@@ -36,9 +36,6 @@ class Engine(object):
     URL = property(GetURL, SetURL)
 
     def GetEngine(this):
-        print("haha: ", this.URL)
-        print("haha2: ", this.ENCODING)
-        print("haha3: ", this.ECHO)
         return create_engine(this.URL, encoding = this.ENCODING, echo = this.ECHO)
 
 

@@ -7,6 +7,7 @@ from ..orm.srm.general.pd_licensereservation import pd_licensereservation
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import *
+from sqlalchemy.ext.declarative import declarative_base
 
 engine = create_engine('sqlite:///:memory:', echo=True)
 
@@ -33,6 +34,24 @@ print(session.query(pd_licensereservation).first())
 #session.delete(value)
 
 metadata = MetaData(bind=srm_engine_pp)
+
+Base = declarative_base()
+
+class ppd_licenseasset(Base):
+   __table__ = Table('pd_licenseasset', metadata, autoload=True)
+
+   def __str__(this):
+      data = {col.name : getattr(this, col.name) for col in this.__table__.c}
+      str_data = ""
+      for col in this.__table__.c:
+         str_data += "{" + col.name + "} : " + str(data[col.name]) + ", "
+      return str_data
+
+
+result = session.query(ppd_licenseasset).first()
+
+
+tt = Table('pd_licenseasset', metadata, autoload=True)
 
 #pd = Table('pd_licenseasset', metadata, autoload=True)
 

@@ -1,12 +1,12 @@
 class UrlGenerator(object):
-    dbtype = {1 : "mssql" , 2 : "oracle", 3 : "sqlite", 4 : "postgresql"}
+    __dbtype__ = {1 : "mssql" , 2 : "oracle", 3 : "sqlite", 4 : "postgresql"}
 
     def __init__(this, a_CdObject):
         this.cd = a_CdObject
         this.url = None
 
     def GenUrl(this, a_dbtype, a_dsn):
-        this.url = this.dbtype[a_dbtype]
+        this.url = this.__dbtype__[a_dbtype]
         this.url += "" if this.cd.driver == None else "+"  + this.cd.driver
         this.url += ("://", ":///")[1 if a_dbtype == 3 else 0]
         this.url += this.cd.UID + ":" + this.cd.PWD + "@"

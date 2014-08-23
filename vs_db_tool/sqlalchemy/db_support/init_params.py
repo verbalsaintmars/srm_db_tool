@@ -1,4 +1,15 @@
 class Init_Params(object):
+    __dbtype__ = {"mssql" : 1, "oracle" : 2, "sqlite" : 3, "postgresql" : 4}
+
+    def GetDBType(this):
+        try:
+            return this.dbtype
+        except:
+            return None
+
+    def SetDBType(this, a_type):
+        this.dbtype = this.__dbtype__[a_type]
+
     def GetUID(this):
         try:
             return this.uid
@@ -69,3 +80,4 @@ class Init_Params(object):
     DB = property(GetDB, SetDB)
     DSN = property(GetDSN, SetDSN)
     LANG = property(GetLANG, SetLANG)
+    DBTYPE = property(GetDBType, SetDBType)

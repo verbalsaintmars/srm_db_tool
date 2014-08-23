@@ -27,7 +27,6 @@ class MsSql(cd.CreateDialect):
         super(MsSql, this).__init__(this.db_type, this.driver)
 
     def __call__(this, a_params):
-
         engine = engine_base.Engine()
         engine.ECHO = True
         engine.ENCODING = 'utf-8'
@@ -46,6 +45,3 @@ class MsSql(cd.CreateDialect):
             engine.URL = this.GenUrl(False)
 
         return engine.GetEngine()
-
-
-

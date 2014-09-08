@@ -15,14 +15,16 @@ Tool to deal with SRM DB
 # ToDo list
 
 ## Phase I
-1. [] Create fake sqlite tables
-2. Backup Framework / sqlite
-3. Configuration Interface
-4. Manipulate Recovery Plan / Protection Group
+- [x] Create fake sqlite tables
+- [ ] Backup Framework / sqlite
+- [ ] Configuration Interface
+- [ ] Manipulate Recovery Plan / Protection Group
+```
    lsrp
    lspg
    rmrp 'rpname' / 'rpmoid'
    rmpg 'rpname' / 'rpmoid'
+```
 
 ## Phase II
 1. generate xml for table schema/type

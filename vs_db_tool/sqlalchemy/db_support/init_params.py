@@ -1,5 +1,5 @@
 class Init_Params(object):
-    __dbtype__ = {"mssql" : 1, "oracle" : 2, "sqlite" : 3, "postgresql" : 4}
+    __dbtype__ = {"mssql": 1, "oracle": 2, "sqlite": 3, "postgresql": 4}
 
     def GetDBType(this):
         try:
@@ -26,7 +26,7 @@ class Init_Params(object):
             return None
 
     def SetPWD(this, a_val):
-        this.pwd= a_val
+        this.pwd = a_val
 
     def GetHost(this):
         try:
@@ -73,6 +73,18 @@ class Init_Params(object):
     def SetLANG(this, a_val):
         this.lang = a_val
 
+    def GetPATH(this):
+        try:
+            return this.path if this.dbtype == 3 else None
+        except:
+            return None
+
+    def SetPATH(this, a_val):
+        """
+        sqlite path. start with '/' will use absolute path
+        """
+        this.path = a_val
+
     UID = property(GetUID, SetUID)
     PWD = property(GetPWD, SetPWD)
     HOST = property(GetHost, SetHost)
@@ -81,3 +93,4 @@ class Init_Params(object):
     DSN = property(GetDSN, SetDSN)
     LANG = property(GetLANG, SetLANG)
     DBTYPE = property(GetDBType, SetDBType)
+    PATH = property(GetPATH, SetPATH)

@@ -1,5 +1,9 @@
 class UrlGenerator(object):
-    __dbtype__ = {1 : "mssql" , 2 : "oracle", 3 : "sqlite", 4 : "postgresql"}
+    """
+    Connnection URL Generator
+    """
+
+    __dbtype__ = {1: "mssql", 2: "oracle", 3: "sqlite", 4: "postgresql"}
 
     def __init__(this, a_CdObject):
         this.cd = a_CdObject
@@ -7,36 +11,49 @@ class UrlGenerator(object):
 
     def GenUrl(this, a_dbtype, a_dsn):
         this.url = this.__dbtype__[a_dbtype]
-        this.url += "" if this.cd.driver == None else "+"  + this.cd.driver
+
+        this.url += "" if this.cd.driver is None else "+" + this.cd.driver
+
         this.url += ("://", ":///")[1 if a_dbtype == 3 else 0]
-        this.url += this.cd.UID + ":" + this.cd.PWD + "@"
-        this.url += this.cd.DSN if a_dsn else this.cd.HOST + ":" + this.cd.PORT
-        this.url += "/" + this.cd.DB if this.cd.DB else ""
-        this.url += "?LANGUAGE=" + this.cd.LANG if this.cd.DB and this.cd.LANG else \
-            "/?LANGUAGE=" + this.cd.LANG if this.cd.LANG else ""
+
+        if a_dbtype == 3:
+            """
+            create_engine('sqlite:///:memory:', echo=True)
+            """
+            this.url += this.cd.PATH
+        else:
+            this.url += this.cd.UID + ":" + this.cd.PWD + "@"
+
+            this.url += this.cd.DSN if a_dsn else this.cd.HOST + ":" +\
+                this.cd.PORT
+
+            this.url += "/" + this.cd.DB if this.cd.DB else ""
+
+            this.url += "?LANGUAGE=" + this.cd.LANG if this.cd.DB and this.cd.LANG else \
+                "/?LANGUAGE=" + this.cd.LANG if this.cd.LANG else ""
+
         return this.url
 
 
 class CreateDialect(object):
     """
-        Typical form of a database URL is:
-        dialect+driver://username:password@host:port/database
+    Typical form of a database URL is:
+    dialect+driver://username:password@host:port/database
+    This class is in charge of creating dialect base on
+    different DB type
     """
 
-    def __init__(this, a_dbtype, a_driver = None):
+    def __init__(this, a_dbtype, a_driver=None):
         """
             UID
             PWD
-
             DSN
-            or
+                or
             HOST
             PORT
-
-            should not be None
         """
         this.dbtype = a_dbtype.lower()
-        this.driver = a_driver.lower() if a_driver != None else None
+        this.driver = a_driver.lower() if a_driver is not None else None
         this.UID = None
         this.PWD = None
         this.HOST = None
@@ -44,15 +61,17 @@ class CreateDialect(object):
         this.DB = None
         this.DSN = None
         this.LANG = None
+        this.PATH = None
 
     def GenMsSqlUrl(this, a_dsn):
-        return  UrlGenerator(this).GenUrl(1, a_dsn)
+        return UrlGenerator(this).GenUrl(1, a_dsn)
 
-    def GenOracleUrl(this, a_dsn = None): pass
+    def GenOracleUrl(this, a_dsn=None): pass
 
-    def GenSqliteUrl(this, a_dsn = None): pass
+    def GenSqliteUrl(this, a_dsn=None):
+        return UrlGenerator(this).GenUrl(3, a_dsn)
 
-    def GenPostgresqlUrl(this, a_dsn = None): pass
+    def GenPostgresqlUrl(this, a_dsn=None): pass
 
     def SetUser(this, a_user):
         this.user = a_user
@@ -96,6 +115,12 @@ class CreateDialect(object):
     def GetLang(this):
         return this.lang
 
+    def SetPATH(this, a_path):
+        this.path = a_path
+
+    def GetPATH(this):
+        return this.path
+
     UID = property(GetUser, SetUser)
     PWD = property(GetPassword, SetPassword)
     HOST = property(GetHost, SetHost)
@@ -103,8 +128,9 @@ class CreateDialect(object):
     DB = property(GetDatabase, SetDatabase)
     DSN = property(GetDsn, SetDsn)
     LANG = property(GetLang, SetLang)
+    PATH = property(GetPATH, SetPATH)
 
-    def GenUrl(this, a_dsn = False):
+    def GenUrl(this, a_dsn=False):
         """
             2 types:
             1. DSN
@@ -124,10 +150,10 @@ class CreateDialect(object):
         return this.GenUrlMap[this.dbtype](this, a_dsn)
 
 
-    __slots__ = \
-    ["user" ,"pwd", "lang", "host", "port", "database", "dsn", "dbtype", "driver", "url"]
+    __slots__=\
+    ["user", "pwd", "lang", "host", "port",
+    "database", "dsn", "dbtype", "driver", "url", "path"]
 
-    GenUrlMap = \
-    {"mssql" : GenMsSqlUrl, "oracle" : GenOracleUrl,
-     "sqlite" : GenSqliteUrl, "postgresql" : GenPostgresqlUrl}
-
+    GenUrlMap=\
+    {"mssql": GenMsSqlUrl, "oracle": GenOracleUrl,
+     "sqlite": GenSqliteUrl, "postgresql": GenPostgresqlUrl}

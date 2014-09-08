@@ -15,7 +15,7 @@ Tool to deal with SRM DB
 # ToDo list
 
 ## Phase I
-1. [x] Create fake sqlite tables
+1. [] Create fake sqlite tables
 2. Backup Framework / sqlite
 3. Configuration Interface
 4. Manipulate Recovery Plan / Protection Group

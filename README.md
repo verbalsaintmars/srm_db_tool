@@ -16,8 +16,8 @@ Tool to deal with SRM DB
 
 ## Phase I
 - [x] Create fake sqlite tables
-- [ ] Backup Framework / sqlite
-- [ ] Configuration Interface
+- [x] Backup Framework / sqlite
+- [ ] Configuration Interface - use python structure for now
 - [ ] Manipulate Recovery Plan / Protection Group
 ```
    lsrp

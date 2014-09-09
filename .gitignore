@@ -43,3 +43,6 @@ nosetests.xml
 *.rar
 *.bak
 tmp/
+
+# sqlite
+*.db

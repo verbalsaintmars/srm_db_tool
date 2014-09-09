@@ -20,9 +20,11 @@ class MakeConn(object):
     def GetSession(this):
         if not this.session:
             if this.engine:
-                this.session = create_session.Session(this.engine(this.param))
-                return this.session()
+                this.session = create_session.Session(
+                    this.engine(this.param))()
+
+                return this.session
             else:
                 return None
         else:
-            return this.session()
+            return this.session

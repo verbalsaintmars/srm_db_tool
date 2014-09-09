@@ -1,5 +1,5 @@
 1.
-save backup tables into .sqlite_tmp dir
+save backup tables into .sqlite_tmp
 
 2.
 provide easy way to backup tables/rows

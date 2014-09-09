@@ -48,11 +48,15 @@ data_1 = Test_table_class(name="verbalsaint", fullname='i am verbalsaint', passw
 data_2 = Test_table_class(name="verbalsaint2", fullname='i am verbalsaint2',
                           password='hahah2')
 
+data_3 = Test_table_class(name="verbalsaint3", fullname='i am verbalsaint3',
+                          password='hahah3')
+
 session = conn.GetSession()
 
-session.add_all([data_1, data_2])
+session.add_all([data_1, data_2, data_3])
 
-reulst1 = session.query(Test_table_class).filter_by(name='verbalsaint').first()
+result1 = session.query(Test_table_class).all()
+"""
 reulst2 = session.query(Test_table_class).order_by(Test_table_class.id).all()
 
 from sqlalchemy.orm import aliased
@@ -61,7 +65,21 @@ reulst3 = session.query(test_table_alias,
         test_table_alias.id).order_by(test_table_alias.id).all()
 
 
-reulst4 = session.query(Test_table_class).filter()
+reulst4 = session.query(Test_table_class).filter().first()
+
+"""
+
+
+from ..backup_tables_mgr import dumpdb
+from ..backup_tables_mgr import fm
+
+dbop = dumpdb.TableOp()
+dbop.Backup(result1)
+
+
+
+
+
 
 """
 User.metadata.create_all(conn.GetEngine())  # create schema into /tmp/test.db

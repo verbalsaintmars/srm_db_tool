@@ -3,7 +3,7 @@ from ..sqlalchemy.make_conn import MakeConn
 from .fm import DbFileOp
 
 import re
-from sqlalchemy import Table, MetaData
+
 from sqlalchemy.ext.declarative import declarative_base
 
 
@@ -22,12 +22,6 @@ def comp_table_name(lhs, rhs):
 
 class TableOp(object):
     def __init__(this, a_dbfile=None):
-        """
-        this.table_obj = a_table_obj
-        this.dbfile = a_dbfile
-        this.table = a_table_obj.__table__ if a_table_obj is not None else \
-            a_table
-        """
         params = Init_Params()
         params.DBTYPE = 'sqlite'
 
@@ -69,8 +63,9 @@ class TableOp(object):
         a_data_obj : a list of orm objects
         a_site : pp for primary , ss for secondary
 
-        1. group data_obj by tables
-
+        TODO:
+        Update passing in a_data_obj.
+        Which means, can't use just simple copy row data
         """
 
         pat = re.compile(a_site + "_(?P<version>\d{4})")
@@ -91,12 +86,14 @@ class TableOp(object):
 
                 this.tables[str(o.__table__.name)] = tn
 
-            table = Table(tn, this.metadata)
+                # table = Table(tn, this.metadata)
+                table = o.__table__.tometadata(this.metadata)
+                table.name = tn
 
-            for col in o.__table__.c:
-                table.append_column(col.copy())
+                # for col in o.__table__.c:
+                #     table.append_column(col.copy())
 
-            this.Base.metadata.create_all()
+                this.Base.metadata.create_all()
 
             TheTable = type(tn, (this.Base,),
                             {'__table__': table})
@@ -110,35 +107,35 @@ class TableOp(object):
             session.add(table_obj)
             session.commit()
 
-        # apply schema naming rule
-        # 1. reflect table inside db file
-        # 2. table name format:
-        # tableName_pp_0001
-        # tableName_ss_0001
-
     def ListTables(this):
         this.metadata.reflect()
         return this.metadata.tables
 
-    def SelectAll(this, a_table_class, a_site="pp"):
-        sorted(
-            [t for t in this.metadata.tables.values()],
-            key=str.lower,
-            cmp=comp_table_name)
+    def Restore(this, a_datum_obj, a_site="pp"):
+        """
+        1. inspect the single obj's table
+        2. load latest table
+        3. select all and return the result
+        """
+        pat = re.compile(a_site + "_(?P<version>\d{4})")
 
-        tnl = this.ReflectTable(
-            str(a_table_class.__table__.name + "_" + a_site))
+        table_in = a_datum_obj.__table__
 
+        tnl = this.ReflectTable(str(table_in.name + "_" + a_site))
         tn = None
 
         if tnl.__len__() > 0:
-            tn = tnl[-1]
-            table = Table(tn, this.metadata)
-
+            tn = str(table_in.name + "_" + a_site + "_" + str(
+                int(pat.search(tnl[-1]).group('version'))).
+                zfill(4))
         else:
             return None
-            
-        
+
+        table = this.metadata.tables[tn]
+
+        session = this.conn.GetSession()
+
+        return session.query(table).all()
 
     def Debug(this):
         return this.conn

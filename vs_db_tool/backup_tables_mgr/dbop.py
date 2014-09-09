@@ -50,13 +50,6 @@ class TableOp(object):
              if pat.search(t.name) is not None],
             key=str.lower,
             cmp=comp_table_name)
-        """
-        print("sshhh")
-        print(metadata.tables)
-        print(type(metadata.tables))
-        print(dir(metadata.tables))
-        print(metadata.tables.values())
-        """
 
     def Backup(this, a_data_obj, a_site="pp"):
         """
@@ -139,3 +132,10 @@ class TableOp(object):
 
     def Debug(this):
         return this.conn
+
+    def Dispose(this):
+        """
+        TODO:
+            Make use for Context Managers
+        """
+        this.conn.GetEngine().close()

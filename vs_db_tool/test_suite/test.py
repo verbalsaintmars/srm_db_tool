@@ -75,13 +75,14 @@ from ..backup_tables_mgr import fm
 
 tableop = dbop.TableOp()
 tableop.Backup(result1)
-
+tableop.Dispose()
 
 dbfileop = fm.DbFileOp()
 filenm = dbfileop.LatestFileName()
 
 tableop2 = dbop.TableOp(filenm)
 result2 = tableop2.Restore(Test_table_class)
+tableop2.Dispose()
 
 dbfileop.RemoveFiles(filenm)
 

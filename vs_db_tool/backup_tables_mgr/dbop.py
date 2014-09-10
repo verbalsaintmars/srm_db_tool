@@ -55,11 +55,10 @@ class TableOp(object):
         """
         a_data_obj : a list of orm objects
         a_site : pp for primary , ss for secondary
-
-        TODO:
-        Update passing in a_data_obj.
-        Which means, can't use just simple copy row data
         """
+        # TODO
+        # this doesn't work for cross database type
+        # .tometadata won't work
 
         pat = re.compile(a_site + "_(?P<version>\d{4})")
 

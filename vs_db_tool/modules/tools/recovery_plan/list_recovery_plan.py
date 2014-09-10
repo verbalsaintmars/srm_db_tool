@@ -28,6 +28,7 @@ class ListRecoveryPlan(object):
                     pdr_planproperties_c.name.like(a_name)).one()
 
                 this.formatter.PrintNameValue(result.__val_dict__())
+                return result
 
             except (MultipleResultsFound, NoResultFound), e:
                 print(e)
@@ -42,10 +43,10 @@ class ListRecoveryPlan(object):
                 this.formatter.PrintValue(name_list, result)
 
     def pp(this, a_name=None):
-        this.ListSite("pp", a_name)
+        return this.ListSite("pp", a_name)
 
     def ss(this, a_name=None):
-        this.ListSite("ss", a_name)
+        return this.ListSite("ss", a_name)
 
     def __call__(this, a_name=None):
         # TODO

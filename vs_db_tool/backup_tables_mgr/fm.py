@@ -3,7 +3,11 @@ Generate sqlite db file name under sqlite_tmp
 Base on
 1. Sequence number or (i.e sqlite_db_0001.db)
 2. input string (xxxx.db)
+
 """
+# TODO
+# Create dir if not exist
+
 import os
 import re
 

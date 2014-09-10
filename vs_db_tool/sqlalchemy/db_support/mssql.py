@@ -24,7 +24,7 @@ class MsSql(cd.CreateDialect):
 
     def __call__(this, a_params):
         engine = engine_base.Engine()
-        engine.ECHO = True
+        engine.ECHO = False
         engine.ENCODING = 'utf-8'
 
         if a_params.DBTYPE == 1:

@@ -25,6 +25,8 @@ class MakeConn(object):
 
                 return this.session
             else:
-                return None
+                this.session = create_session.Session(
+                    this.GetEngine())()
+                return this.session
         else:
             return this.session

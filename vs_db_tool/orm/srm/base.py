@@ -8,13 +8,24 @@ def GenTable(a_table_name, a_engine):
 
     def __str__(this):
         data = {col.name: getattr(this, col.name) for col in this.__table__.c}
+
         str_data = ""
-        for col in this.__table__.c:
-            str_data += "{" + col.name + "} : " + str(data[col.name]) + ", "
+
+        for (cnt,val) in enumerate(this.__table__.c):
+            if cnt != 0:
+                str_data += ", "
+            str_data += "{" + val.name + "} : " + str(data[val.name])
+
         return str_data
 
+    def __val_dict__(this):
+        return {col.name: getattr(this, col.name) for col in this.__table__.c}
+
+
     return type(a_table_name, (declarative_base(),),
-                {'__table__': __table__, '__str__': __str__})
+                {'__table__': __table__,
+                 '__str__': __str__,
+                 '__val_dict__': __val_dict__})
 
 """
 class pd_licenseasset(OrmBase):

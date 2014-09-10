@@ -138,4 +138,4 @@ class TableOp(object):
         TODO:
             Make use for Context Managers
         """
-        this.conn.GetEngine().close()
+        this.conn.GetEngine().dispose()

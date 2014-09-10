@@ -4,7 +4,7 @@ from ..sqlalchemy.db_support.create_session import Session
 from ..sqlalchemy.db_support.init_params import Init_Params
 from ..sqlalchemy.make_conn import MakeConn
 
-
+"""
 # Create a parameters
 params_pp = Init_Params()
 params_pp.DBTYPE = 'sqlite'
@@ -56,7 +56,6 @@ session = conn.GetSession()
 session.add_all([data_1, data_2, data_3])
 
 result1 = session.query(Test_table_class).all()
-"""
 reulst2 = session.query(Test_table_class).order_by(Test_table_class.id).all()
 
 from sqlalchemy.orm import aliased
@@ -66,9 +65,6 @@ reulst3 = session.query(test_table_alias,
 
 
 reulst4 = session.query(Test_table_class).filter().first()
-
-"""
-
 
 from ..backup_tables_mgr import dbop
 from ..backup_tables_mgr import fm
@@ -85,8 +81,36 @@ result2 = tableop2.Restore(Test_table_class)
 tableop2.Dispose()
 
 dbfileop.RemoveFiles(filenm)
+"""
 
 
+######################################
+
+params_hq = Init_Params()
+params_hq.DBTYPE = 'mssql'
+params_hq.HOST = '10.20.233.103'
+params_hq.UID = 'ad'
+params_hq.PWD = 'ca$hc0w'
+params_hq.DB = '01_HQ'
+
+HQconn = MakeConn(params_hq)
+from ..orm.srm import pdr_planproperties
+from ..orm.srm import pdr_plancontents
+
+pdr_planproperties_c = pdr_planproperties.GetTable(HQconn.GetEngine())
+
+HQsession = HQconn.GetSession()
+
+HQResult = HQsession.query(pdr_planproperties_c).all()
+HQResult = HQsession.query(pdr_c_c).all()
+
+
+params_rh = Init_Params()
+params_rh.DBTYPE = 'mssql'
+params_rh.HOST = '10.20.233.103'
+params_rh.UID = 'ad'
+params_rh.PWD = 'ca$hc0w'
+params_rh.DB = 'RH_902'
 
 """
 User.metadata.create_all(conn.GetEngine())  # create schema into /tmp/test.db

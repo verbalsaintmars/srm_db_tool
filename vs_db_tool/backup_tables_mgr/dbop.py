@@ -1,10 +1,20 @@
 from ..sqlalchemy.db_support.init_params import Init_Params
 from ..sqlalchemy.make_conn import MakeConn
+from ..exception.predefined import MODULE_EXCEPT_FORMAT
 from .fm import DbFileOp
 
 import re
 
 from sqlalchemy.ext.declarative import declarative_base
+
+# General Types
+from sqlalchemy import VARCHAR # Latin1_General_CI_AS
+from sqlalchemy import UnicodeText
+
+# DB Specific types
+# MS SQL
+from sqlalchemy.dialects.mssql import NTEXT
+
 
 
 # tableName_pp_0001
@@ -37,7 +47,15 @@ class TableOp(object):
         this.Base.metadata.bind = this.conn.GetEngine()
         this.metadata = this.Base.metadata
 
+        # cache
         this.tables = {}
+
+    def ConvertType(this, a_type):
+        return {
+                NTEXT: UnicodeText,
+                VARCHAR: VARCHAR
+               }[a_type]
+
 
     def ReflectTable(this, a_table_name):
 
@@ -51,23 +69,30 @@ class TableOp(object):
             key=str.lower,
             cmp=comp_table_name)
 
-    def Backup(this, a_data_obj, a_site="pp"):
+    def Backup(this, a_value_list, a_site="pp"):
         """
         a_data_obj : a list of orm objects
         a_site : pp for primary , ss for secondary
         """
-        # TODO
-        # this doesn't work for cross database type
-        # .tometadata won't work
+        if type(a_value_list) is not list:
+            print("a_value_list must be a list of table class objects")
+            return None
 
         pat = re.compile(a_site + "_(?P<version>\d{4})")
 
-        for o in a_data_obj:
-            tn = None
+        session = this.conn.GetSession()
+
+        for o in a_value_list:
+            table_class = None
 
             try:
-                tn = this.tables[str(o.__table__.name)]
-            except:
+                table_class = this.tables[str(o.__table__.name) + a_site]
+
+            except AttributeError as e:
+                print(MODULE_EXCEPT_FORMAT.format(__name__, e))
+                print("a_value_list must be a list of table class objects")
+
+            except KeyError:
                 tnl = this.ReflectTable(str(o.__table__.name + "_" + a_site))
                 if tnl.__len__() > 0:
                     tn = str(o.__table__.name + "_" + a_site + "_" + str(
@@ -76,28 +101,42 @@ class TableOp(object):
                 else:
                     tn = str(o.__table__.name + "_" + a_site + "_" + "0001")
 
-                this.tables[str(o.__table__.name)] = tn
 
                 # table = Table(tn, this.metadata)
                 table = o.__table__.tometadata(this.metadata)
                 table.name = tn
 
+                for c in table.columns.values():
+                    if type(c.type) is NTEXT:
+                        c.type = this.ConvertType(NTEXT)()
+                    if type(c.type) is VARCHAR:
+                        c.type = this.ConvertType(
+                            VARCHAR)(255)
+
                 # for col in o.__table__.c:
                 #     table.append_column(col.copy())
 
+                this.tables[str(o.__table__.name) + a_site] =\
+                    type(tn, (this.Base,), {'__table__': table})
+
+                # hack : do not create index, prevent same indexname
+                # created against different table_000x
+                table.indexes = set()
+
                 this.Base.metadata.create_all()
 
-            TheTable = type(tn, (this.Base,),
-                            {'__table__': table})
+            except e:
+                print(MODULE_EXCEPT_FORMAT.format(__name__, e))
 
-            table_obj = TheTable()
+
+            table_obj = this.tables[str(o.__table__.name) + a_site]()
 
             for col in o.__table__.c:
                 setattr(table_obj, col.name, getattr(o, col.name))
 
-            session = this.conn.GetSession()
             session.add(table_obj)
-            session.commit()
+
+        session.commit()
 
     def ListTables(this):
         this.metadata.reflect()

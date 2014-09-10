@@ -1,3 +1,8 @@
+# TODO
+# Interface:
+# PrintValue : Print out column name in the first line
+#              Values follows
+# PrintNameValue : Print out column name on the left, value on the right
 
 class PrintResult(object):
     NameValueHeader = "{NAME:^10} : {VALUE:^10}"

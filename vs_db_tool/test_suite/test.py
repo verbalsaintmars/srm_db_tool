@@ -3,7 +3,6 @@ from ..sqlalchemy.db_support.sqlite import Sqlite
 from ..sqlalchemy.db_support.create_session import Session
 from ..sqlalchemy.db_support.init_params import Init_Params
 from ..sqlalchemy.make_conn import MakeConn
-
 """
 # Create a parameters
 params_pp = Init_Params()
@@ -18,6 +17,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.types import Text
 
 
 class TestTable(Base):
@@ -26,7 +26,7 @@ class TestTable(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     fullname = Column(String)
-    password = Column(String)
+    password = Column(Text(convert_unicode=True))
 
     def __repr__(self):
         return "<User(name='%s', fullname='%s', password='%s')>" % (
@@ -56,6 +56,11 @@ session = conn.GetSession()
 session.add_all([data_1, data_2, data_3])
 
 result1 = session.query(Test_table_class).all()
+
+ttable = result1[0].__table__
+"""
+
+"""
 reulst2 = session.query(Test_table_class).order_by(Test_table_class.id).all()
 
 from sqlalchemy.orm import aliased
@@ -85,7 +90,6 @@ dbfileop.RemoveFiles(filenm)
 
 
 ######################################
-
 params_hq = Init_Params()
 params_hq.DBTYPE = 'mssql'
 params_hq.HOST = '10.20.233.103'
@@ -96,13 +100,30 @@ params_hq.DB = '01_HQ'
 HQconn = MakeConn(params_hq)
 from ..orm.srm import pdr_planproperties
 from ..orm.srm import pdr_plancontents
+from ..orm.srm import g_do_array
+from ..orm.srm import g_string_array
 
-pdr_planproperties_c = pdr_planproperties.GetTable(HQconn.GetEngine())
+#pdr_planproperties_c = pdr_planproperties.GetTable(HQconn.GetEngine())
+g_do_array_c = g_do_array.GetTable(HQconn.GetEngine())
+g_string_array_c = g_string_array.GetTable(HQconn.GetEngine())
+#g_do_array.GetTable(HQconn.GetEngine())
 
 HQsession = HQconn.GetSession()
 
-HQResult = HQsession.query(pdr_planproperties_c).all()
-HQResult = HQsession.query(pdr_c_c).all()
+#HQResult = HQsession.query(pdr_planproperties_c).all()
+HQResult = HQsession.query(g_do_array_c).all()
+HQResult2 = HQsession.query(g_string_array_c).all()
+ttable2 = HQResult[0].__table__
+
+from ..backup_tables_mgr import dbop
+from ..backup_tables_mgr import fm
+
+tableop = dbop.TableOp()
+tableop.Backup(HQResult)
+re = tableop.Restore(g_do_array_c)
+
+tableop.Backup(HQResult2)
+re2 = tableop.Restore(g_string_array_c)
 
 
 params_rh = Init_Params()

@@ -8,7 +8,7 @@ params_hq.UID = 'ad'
 params_hq.PWD = 'ca$hc0w'
 params_hq.DB = '01_HQ'
 
-HQconn = MakeConn(params_hq)
+ProtectedSiteConn = MakeConn(params_hq)
 
 params_rh = Init_Params()
 params_rh.DBTYPE = 'mssql'
@@ -17,4 +17,4 @@ params_rh.UID = 'ad'
 params_rh.PWD = 'ca$hc0w'
 params_rh.DB = '01_RH'
 
-RHconn = MakeConn(params_rh)
+ReconverSiteConn= MakeConn(params_rh)

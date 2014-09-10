@@ -1,1 +1,2 @@
 from .list_recovery_plan import ListRecoveryPlan
+from .remove_recovery_plan import RemoveRecoveryPlan

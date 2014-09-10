@@ -5,8 +5,7 @@ Base on
 2. input string (xxxx.db)
 
 """
-# TODO
-# Create dir if not exist
+from ..exception.predefined import MODULE_EXCEPT_FORMAT
 
 import os
 import re
@@ -31,10 +30,14 @@ class DbFileOp(object):
     FILE_REGEX = "sqlite_db_\d{4}\.db"
 
     def GetFileName(this, a_fullpath=False):
-        from os import listdir
-        from os.path import isfile, join
+        from os import listdir, makedirs
+        from os.path import isfile, join, exists
 
         pat = re.compile(DbFileOp.FILE_REGEX, re.IGNORECASE)
+
+        if not exists(DEFAULT_DB_PATH):
+            makedirs(DEFAULT_DB_PATH)
+            return []
 
         return sorted(
             [f if not a_fullpath else join(DEFAULT_DB_PATH, f)
@@ -67,11 +70,13 @@ class DbFileOp(object):
         if a_filename is not None:
             try:
                 os.remove(join(DEFAULT_DB_PATH, a_filename))
-            except:
-                # TODO make it better
-                print("file name : " + a_filename + " doesn't exist in dir : "
-                      + DEFAULT_DB_PATH)
+            except e:
+                print(MODULE_EXCEPT_FORMAT.format(__name__, e))
         else:
             db_files = this.GetFileName(a_fullpath=True)
             for f in db_files:
-                os.remove(f)
+                try:
+                    os.remove(f)
+                except e:
+                    print(MODULE_EXCEPT_FORMAT.format(__name__, e))
+

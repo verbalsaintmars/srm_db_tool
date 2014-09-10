@@ -37,5 +37,3 @@ class Engine(object):
 
     def GetEngine(this):
         return create_engine(this.URL, encoding = this.ENCODING, echo = this.ECHO)
-
-

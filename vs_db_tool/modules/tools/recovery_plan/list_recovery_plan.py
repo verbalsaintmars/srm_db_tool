@@ -10,7 +10,7 @@ class ListRecoveryPlan(object):
         this.ss_conn = a_ss_conn
         this.formatter = a_formatter
 
-    def ListSite(this, a_site, a_name):
+    def ListSite(this, a_site, a_name=None):
         session = None
         pdr_planproperties_c = None
         result = None
@@ -27,30 +27,65 @@ class ListRecoveryPlan(object):
                 result = session.query(pdr_planproperties_c).filter(
                     pdr_planproperties_c.name.like(a_name)).one()
 
-                this.formatter.PrintNameValue(result.__val_dict__())
                 return result
 
             except (MultipleResultsFound, NoResultFound), e:
                 print(e)
+                return None
         else:
             result = session.query(
                 pdr_planproperties_c.name,
                 pdr_planproperties_c.mo_id,
                 pdr_planproperties_c.peerplanmoid).all()
+            return result
 
-            if result is not None:
-                name_list = result[0].keys()
-                this.formatter.PrintValue(name_list, result)
+    def PrintResult(this, a_result, a_name):
+        if a_name is not None and a_result is not None:
+            this.formatter.PrintNameValue(a_result.__val_dict__())
+        elif a_result is not None:
+            name_list = a_result[0].keys()
+            this.formatter.PrintValue(name_list, a_result)
+        return a_result
+
 
     def pp(this, a_name=None):
-        return this.ListSite("pp", a_name)
+        return this.PrintResult(this.ListSite("pp", a_name), a_name)
+
 
     def ss(this, a_name=None):
-        return this.ListSite("ss", a_name)
+        return this.PrintResult(this.ListSite("ss", a_name), a_name)
 
     def __call__(this, a_name=None):
         # TODO
         # join both side with peerplanmoid
-        return None
+        pp_result = this.ListSite('pp', a_name)
+        ss_result = this.ListSite('ss', a_name)
 
+        if a_name is not None:
+            result = (1 if pp_result is not None else 0) &\
+                (1 if ss_result is not None else 0)
+            print(result)
 
+            if result == 1:
+
+                if pp_result.peerplanmoid == ss_result.mo_id:
+                    print("--Protected Site--")
+                    this.PrintResult(pp_result, a_name)
+                    print("\n--Recovery Site--")
+                    this.PrintResult(ss_result, a_name)
+
+                else:
+                    print("moid doesn't match :\
+                          {} in Protected Site's peerplanmoid".format(
+                        pp_result.peerplanmoid))
+            else:
+                if pp_result is None:
+                    print("Can not find {} in Protected Site ".format(a_name))
+                if ss_result is None:
+                    print("Can not find {} in Recovery Site ".format(a_name))
+        else:
+            p_set = {p_res.peerplanmoid for p_res in pp_result}
+            s_set = {s_res.mo_id for s_res in ss_result}
+            p_set &= s_set
+            result = [p_res for p_res in pp_result if p_res.peerplanmoid in p_set]
+            this.PrintResult(result, a_name)

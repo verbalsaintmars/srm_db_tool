@@ -8,9 +8,9 @@ from vs_db_tool.formatter.layout import PrintResult
 from vs_db_tool.backup_tables_mgr.dbop import TableOp
 from vs_db_tool.backup_tables_mgr.fm import DbFileOp
 
-tableop = dbop.TableOp()
-tableop.Backup([pp_result], a_site="pp")
-tableop.Backup([ss_result], a_site="ss")
+#tableop = dbop.TableOp()
+#tableop.Backup([pp_result], a_site="pp")
+#tableop.Backup([ss_result], a_site="ss")
 
 
 class RemoveRecoveryPlan(object):

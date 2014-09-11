@@ -6,6 +6,7 @@ Base on
 
 """
 from ..exception.predefined import MODULE_EXCEPT_FORMAT
+from ..exception.predefined import GeneralException
 
 import os
 import re
@@ -70,13 +71,20 @@ class DbFileOp(object):
         if a_filename is not None:
             try:
                 os.remove(join(DEFAULT_DB_PATH, a_filename))
-            except e:
-                print(MODULE_EXCEPT_FORMAT.format(__name__, e))
+            except Exception as e:
+                print(
+                    GeneralException(
+                        'S1',
+                        "Can not remove file : {}".format(a_filename),
+                        __name__))
         else:
             db_files = this.GetFileName(a_fullpath=True)
             for f in db_files:
                 try:
                     os.remove(f)
-                except e:
-                    print(MODULE_EXCEPT_FORMAT.format(__name__, e))
-
+                except Exception as e:
+                    print(
+                        GeneralException(
+                            'S1',
+                            "Can not remove file : {}".format(f),
+                            __name__))

@@ -1,14 +1,15 @@
-from vs_db_tool.orm.srm import pdr_planproperties
-from vs_db_tool.orm.srm import pdr_plancontents
-from vs_db_tool.orm.srm import pdr_protectiongroupmap
-from vs_db_tool.orm.srm import g_do_array
+from srm_db_tool.orm.srm import pdr_planproperties
+from srm_db_tool.orm.srm import pdr_plancontents
+from srm_db_tool.orm.srm import pdr_protectiongroupmap
+from srm_db_tool.orm.srm import g_do_array
 
-from vs_db_tool.formatter.layout import PrintResult
+from srm_db_tool.formatter.layout import PrintResult
 
-from vs_db_tool.backup_tables_mgr.dbop import TableOp
-from vs_db_tool.backup_tables_mgr.fm import DbFileOp
+from srm_db_tool.backup_tables_mgr.dbop import TableOp
+from srm_db_tool.backup_tables_mgr.fm import DbFileOp
 
-from vs_db_tool.exception.predefined import MODULE_EXCEPT_FORMAT
+from srm_db_tool.exception.predefined import MODULE_EXCEPT_FORMAT
+from srm_db_tool.exception.predefined import GeneralException
 
 #tableop = dbop.TableOp()
 #tableop.Backup([pp_result], a_site="pp")
@@ -47,8 +48,8 @@ class RecoverRecoveryPlan(object):
         try:
             for r in result:
                 this.PrintResult(r)
-        except e:
-            print(MODULE_EXCEPT_FORMAT.format(__name__, e))
+        except Exception as e:
+            return
 
 
     def Recover(this, a_name, a_site):
@@ -100,14 +101,15 @@ class RecoverRecoveryPlan(object):
             session.add(pc_obj)
             session.add(pg_obj)
             session.commit()
-        except e:
+        except Exception as e:
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
         else:
             try:
                 this.RemoveBackup(pdr_pp)
                 this.RemoveBackup(pdr_pc)
                 this.RemoveBackup(pdr_pg)
-            except e:
+                this.RemoveBackup(go_id)
+            except Exception as e:
                 print(MODULE_EXCEPT_FORMAT.format(__name__, e))
 
     def RemoveBackup(this, a_datum):
@@ -119,3 +121,11 @@ class RecoverRecoveryPlan(object):
             return
 
         this.Recover(a_name, a_site)
+
+    def SetDB(this, a_name):
+        this.tableop = TableOp(a_name)
+
+    def GetDB(this):
+        return this.tableop
+
+    DB = property(GetDB, SetDB)

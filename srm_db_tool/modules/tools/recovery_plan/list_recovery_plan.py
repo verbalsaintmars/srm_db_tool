@@ -1,5 +1,9 @@
-from vs_db_tool.orm.srm import pdr_planproperties
-from vs_db_tool.formatter.layout import PrintResult
+from srm_db_tool.orm.srm import pdr_planproperties
+
+from srm_db_tool.formatter.layout import PrintResult
+
+from srm_db_tool.exception.predefined import GeneralException
+from srm_db_tool.exception.predefined import SaException
 
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
@@ -30,7 +34,11 @@ class ListRecoveryPlan(object):
                 return result
 
             except (MultipleResultsFound, NoResultFound), e:
-                print(e)
+                print(
+                    GeneralException(
+                        "SA",
+                        "session query failed with not having exact 1 result",
+                        __name__))
                 return None
         else:
             result = session.query(
@@ -56,15 +64,12 @@ class ListRecoveryPlan(object):
         return this.PrintResult(this.ListSite("ss", a_name), a_name)
 
     def __call__(this, a_name=None):
-        # TODO
-        # join both side with peerplanmoid
         pp_result = this.ListSite('pp', a_name)
         ss_result = this.ListSite('ss', a_name)
 
         if a_name is not None:
             result = (1 if pp_result is not None else 0) &\
                 (1 if ss_result is not None else 0)
-            print(result)
 
             if result == 1:
 
@@ -80,9 +85,13 @@ class ListRecoveryPlan(object):
                         pp_result.peerplanmoid))
             else:
                 if pp_result is None:
-                    print("Can not find {} in Protected Site ".format(a_name))
+                    print(
+                        "Can not find {} recovery plan on Protected Site ".\
+                            format(a_name))
                 if ss_result is None:
-                    print("Can not find {} in Recovery Site ".format(a_name))
+                    print(
+                        "Can not find {} recovery plan on Recovery Site ".\
+                            format(a_name))
         else:
             p_set = {p_res.peerplanmoid for p_res in pp_result}
             s_set = {s_res.mo_id for s_res in ss_result}

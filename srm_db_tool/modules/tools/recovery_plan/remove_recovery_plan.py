@@ -1,13 +1,13 @@
-from vs_db_tool.orm.srm import pdr_planproperties
-from vs_db_tool.orm.srm import pdr_plancontents
-from vs_db_tool.orm.srm import pdr_protectiongroupmap
-from vs_db_tool.orm.srm import g_do_array
+from srm_db_tool.orm.srm import pdr_planproperties
+from srm_db_tool.orm.srm import pdr_plancontents
+from srm_db_tool.orm.srm import pdr_protectiongroupmap
+from srm_db_tool.orm.srm import g_do_array
 
-from vs_db_tool.formatter.layout import PrintResult
+from srm_db_tool.formatter.layout import PrintResult
 
-from vs_db_tool.backup_tables_mgr.dbop import TableOp
-from vs_db_tool.backup_tables_mgr.fm import DbFileOp
-from vs_db_tool.exception.predefined import MODULE_EXCEPT_FORMAT
+from srm_db_tool.backup_tables_mgr.dbop import TableOp
+from srm_db_tool.backup_tables_mgr.fm import DbFileOp
+from srm_db_tool.exception.predefined import MODULE_EXCEPT_FORMAT
 
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
@@ -85,7 +85,7 @@ class RemoveRecoveryPlan(object):
 
             return result
 
-        except (MultipleResultsFound, NoResultFound), e:
+        except (MultipleResultsFound, NoResultFound) as e:
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
             return None
 
@@ -102,7 +102,7 @@ class RemoveRecoveryPlan(object):
 
             return result
 
-        except (MultipleResultsFound, NoResultFound), e:
+        except (MultipleResultsFound, NoResultFound) as e:
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
             return None
 
@@ -116,7 +116,7 @@ class RemoveRecoveryPlan(object):
 
             return result
 
-        except (MultipleResultsFound, NoResultFound), e:
+        except (MultipleResultsFound, NoResultFound) as e:
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
             return None
 
@@ -132,7 +132,7 @@ class RemoveRecoveryPlan(object):
 
             return result
 
-        except (MultipleResultsFound, NoResultFound), e:
+        except (MultipleResultsFound, NoResultFound) as e:
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
             return None
 
@@ -164,7 +164,7 @@ class RemoveRecoveryPlan(object):
             this.Backup([pdr_pc], a_site)
             this.Backup([pdr_pg], a_site)
             this.Backup([pdr_go_do_array], a_site)
-        except e:
+        except Exception as e:
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
         else:
             this.Remove(pdr_pp, a_site)

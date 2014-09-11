@@ -1,1 +1,2 @@
-__all__ = ['test_suite']
+from .main.main import *
+

@@ -6,15 +6,17 @@ params_hq.DBTYPE = 'mssql'
 params_hq.HOST = '10.20.233.103'
 params_hq.UID = 'ad'
 params_hq.PWD = 'ca$hc0w'
-params_hq.DB = '01_HQ'
+#params_hq.DB = '01_HQ'
+params_hq.DB = 'HQ_TEST'
 
-ProtectedSiteConn = MakeConn(params_hq)
+pp_conn = MakeConn(params_hq)
 
 params_rh = Init_Params()
 params_rh.DBTYPE = 'mssql'
 params_rh.HOST = '10.20.233.103'
 params_rh.UID = 'ad'
 params_rh.PWD = 'ca$hc0w'
-params_rh.DB = '01_RH'
+#params_rh.DB = '01_RH'
+params_rh.DB = 'HR_TEST'
 
-ReconverSiteConn= MakeConn(params_rh)
+ss_conn = MakeConn(params_rh)

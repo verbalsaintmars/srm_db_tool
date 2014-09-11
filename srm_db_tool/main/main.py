@@ -1,4 +1,4 @@
-from ..config_mgr import dummy as connection
+from ..config_mgr.dummy import *
 
 from ..modules import *
 
@@ -70,18 +70,19 @@ tableop.Backup(result)
 
 
 
+from ..backup_tables_mgr.dbop import TableOp
 
 
 # list recovery plan module
-lsrp = ListRecoveryPlan(connection.ProtectedSiteConn, connection.ReconverSiteConn)
+lsrp = ListRecoveryPlan(pp_conn, ss_conn)
 
 # remove recovery plan module
-rmrp = RemoveRecoveryPlan(connection.ProtectedSiteConn, connection.ReconverSiteConn)
+rmrp = RemoveRecoveryPlan(pp_conn, ss_conn)
 
 # recover recovery plan module
 recoverrp = RecoverRecoveryPlan(
-            connection.ProtectedSiteConn,
-            connection.ReconverSiteConn,
+            pp_conn,
+            ss_conn,
             rmrp.TABLEOP)
 
 """

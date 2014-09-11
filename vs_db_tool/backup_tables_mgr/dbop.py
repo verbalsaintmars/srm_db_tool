@@ -164,9 +164,17 @@ class TableOp(object):
 
         table = this.metadata.tables[tn]
 
+        from vs_db_tool.orm.srm import base
+        table_c = base.GenTable(str(table.name), this.conn.GetEngine())
+
         session = this.conn.GetSession()
 
-        return session.query(table).all()
+        return session.query(table_c).all()
+
+    def Remove(this, a_datum_obj):
+        session = this.conn.GetSession()
+        session.delete(a_datum_obj)
+        session.commit()
 
     def Debug(this):
         return this.conn

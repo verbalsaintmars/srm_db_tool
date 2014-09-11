@@ -29,3 +29,6 @@ class PrintResult(object):
     def PrintNameValue(this, a_value_dict):
         for name, value in sorted(a_value_dict.items()):
             print("{} : {}".format(name, value))
+
+    def PrintRecoveryPlan(this, a_pdr_planproperties):
+        print("Recovery Plan : {}".format(a_pdr_planproperties.name))

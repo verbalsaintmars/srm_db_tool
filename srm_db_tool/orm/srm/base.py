@@ -34,8 +34,6 @@ def GenTable(a_table_name, a_engine):
                 str_data += ", "
             str_data += "{" + val.name + "} : " + str(data[val.name])
 
-        str_data += '}'
-
         return str_data
 
     def __val_dict__(this):

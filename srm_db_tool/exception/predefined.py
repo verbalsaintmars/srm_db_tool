@@ -27,7 +27,7 @@ class GeneralException(Exception):
 
 class SaException(Exception):
     def __init__(this, a_err, a_msg, a_name, a_sa_e):
-        super(GeneralException, this).__init__(a_msg)
+        super(SaException, this).__init__(a_msg)
         this.err = a_err
         this.name = a_name
         this.sae = a_sa_e

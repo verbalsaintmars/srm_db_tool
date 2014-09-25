@@ -1,8 +1,11 @@
+# TODO Oracle DB
+# TODO postgresql DB
+
+
 class UrlGenerator(object):
     """
     Connnection URL Generator
     """
-
     __dbtype__ = {1: "mssql", 2: "oracle", 3: "sqlite", 4: "postgresql"}
 
     def __init__(this, a_CdObject):
@@ -149,11 +152,6 @@ class CreateDialect(object):
         """
         return this.GenUrlMap[this.dbtype](this, a_dsn)
 
-
-    __slots__=\
-    ["user", "pwd", "lang", "host", "port",
-    "database", "dsn", "dbtype", "driver", "url", "path"]
-
-    GenUrlMap=\
-    {"mssql": GenMsSqlUrl, "oracle": GenOracleUrl,
-     "sqlite": GenSqliteUrl, "postgresql": GenPostgresqlUrl}
+    GenUrlMap = \
+        {"mssql": GenMsSqlUrl, "oracle": GenOracleUrl,
+         "sqlite": GenSqliteUrl, "postgresql": GenPostgresqlUrl}

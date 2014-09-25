@@ -1,3 +1,7 @@
+from srm_db_tool.orm.fm import OrmFile
+
+OrmFile().GenOrmFile("pdr_planproperties", "srm")
+
 from srm_db_tool.orm.srm import pdr_planproperties
 
 from srm_db_tool.formatter.layout import PrintResult
@@ -7,6 +11,7 @@ from srm_db_tool.exception.predefined import SaException
 
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
+
 
 class ListRecoveryPlan(object):
     def __init__(this, a_pp_conn, a_ss_conn, a_formatter=PrintResult()):

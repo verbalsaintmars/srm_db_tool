@@ -5,15 +5,11 @@ Base on
 2. input string (xxxx.db)
 
 """
-from ..exception.predefined import MODULE_EXCEPT_FORMAT
 from ..exception.predefined import GeneralException
 
 import os
 import re
-
-current_path = os.path.dirname(os.path.realpath(__file__))
-
-DEFAULT_DB_PATH = os.path.join(current_path, "sqlite_tmp")
+import tempfile
 
 
 def comp_db_file_name(lhs, rhs):
@@ -29,6 +25,13 @@ def comp_db_file_name(lhs, rhs):
 
 class DbFileOp(object):
     FILE_REGEX = "sqlite_db_\d{4}\.db"
+    # current_path = os.path.dirname(os.path.realpath(__file__))
+    # DEFAULT_DB_PATH = os.path.join(current_path, "sqlite_tmp")
+    DEFAULT_DB_PATH = tempfile.gettempdir()
+
+    def __init__(this, a_default_path=None):
+        this.path = \
+            this.DEFAULT_DB_PATH if not a_default_path else a_default_path
 
     def GetFileName(this, a_fullpath=False):
         from os import listdir, makedirs
@@ -36,14 +39,14 @@ class DbFileOp(object):
 
         pat = re.compile(DbFileOp.FILE_REGEX, re.IGNORECASE)
 
-        if not exists(DEFAULT_DB_PATH):
-            makedirs(DEFAULT_DB_PATH)
+        if not exists(this.path):
+            makedirs(this.path)
             return []
 
         return sorted(
-            [f if not a_fullpath else join(DEFAULT_DB_PATH, f)
-             for f in listdir(DEFAULT_DB_PATH)
-             if isfile(join(DEFAULT_DB_PATH, f)) and
+            [f if not a_fullpath else join(this.path, f)
+             for f in listdir(this.path)
+             if isfile(join(this.path, f)) and
              pat.search(f) is not None],
             key=str.lower,
             cmp=comp_db_file_name)
@@ -54,10 +57,10 @@ class DbFileOp(object):
         pat = re.compile("\d{4}")
 
         if db_files.__len__() != 0:
-            return join(DEFAULT_DB_PATH, "sqlite_db_" + str(
+            return join(this.path, "sqlite_db_" + str(
                 int(pat.search(db_files[-1]).group()) + 1).zfill(4) + ".db")
         else:
-            return join(DEFAULT_DB_PATH, "sqlite_db_0001.db")
+            return join(this.path, "sqlite_db_0001.db")
 
     def LatestFileName(this):
         db_files = this.GetFileName(a_fullpath=True)
@@ -70,7 +73,7 @@ class DbFileOp(object):
         from os.path import join
         if a_filename is not None:
             try:
-                os.remove(join(DEFAULT_DB_PATH, a_filename))
+                os.remove(join(this.path, a_filename))
             except Exception as e:
                 print(
                     GeneralException(
@@ -87,4 +90,5 @@ class DbFileOp(object):
                         GeneralException(
                             'S1',
                             "Can not remove file : {}".format(f),
-                            __name__))
+                            __name__,
+                            e))

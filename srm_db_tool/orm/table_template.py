@@ -1,7 +1,11 @@
-from .base import GenTable
+from srm_db_tool.orm.base import GenTable
 
 
 class TheTable(object):
+    """
+    Cache the Engine object
+    Cache generated table class object
+    """
     __cache_engine__ = None
     __cache_table__ = None
 

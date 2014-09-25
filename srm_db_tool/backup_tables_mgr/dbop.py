@@ -12,13 +12,12 @@ import re
 from sqlalchemy.ext.declarative import declarative_base
 
 # General Types
-from sqlalchemy import VARCHAR # Latin1_General_CI_AS
+# from sqlalchemy import VARCHAR  # Latin1_General_CI_AS
 from sqlalchemy import UnicodeText
 
 # DB Specific types
 # MS SQL
 from sqlalchemy.dialects.mssql import NTEXT
-
 
 
 # tableName_pp_0001
@@ -36,12 +35,27 @@ def comp_table_name(lhs, rhs):
 
 class TableOp(object):
     """
-    Each TableOb uses single sqlite db.
-    Each TableOb uses backup intp single table version and will remember that version
-    Each TableOb uses can restore from different version of table
+    Each TableOb instance uses single sqlite db file.
+    Each TableOb instance has it's own connection to sqlite db file
+    Each TableOb instance can restore from different version of table
     """
 
+    def __enter__(this):
+        return this
+
+    def __exit__(this, exc_type, exc_value, exc_tb):
+        if exc_type is None:
+            # print('exited normally\n')
+            this.Dispose()
+        else:
+            # print('raise an exception!', exc_type)
+            this.Dispose()
+            return False
+
     def __init__(this, a_dbfile=None):
+        """
+        a_dbfile is the sqlite db file
+        """
         this.params = Init_Params()
         this.params.DBTYPE = 'sqlite'
 
@@ -61,13 +75,22 @@ class TableOp(object):
         this.tables = {}
 
     def ConvertType(this, a_type):
-        return {
-                NTEXT: UnicodeText,
-                VARCHAR: VARCHAR
-               }[a_type]
-
+        """
+        Convert from different Database's
+            column type to compatible sqlite column type
+        """
+        try:
+            return {
+                NTEXT: UnicodeText
+            }[a_type]
+        except KeyError:
+            return a_type
 
     def ReflectTable(this, a_table_name):
+        """
+        Reflect the a_table_name_xxxx (xxxx is version) schema(s)
+            base on this instance's engine connetion
+        """
 
         this.metadata.reflect()
 
@@ -81,8 +104,8 @@ class TableOp(object):
 
     def Backup(this, a_value_list, a_site="pp"):
         """
-        a_data_obj : a list of orm objects, which should have table information
-        a_site : pp for primary , ss for secondary
+        a_value_list : list of orm objects, which have table information
+        a_site : pp for primary , ss for secondary, or other value
         """
         try:
             if type(a_value_list) is not list:
@@ -100,15 +123,24 @@ class TableOp(object):
             table_class = None
 
             try:
+                """
+                tablename_{a_site}_xxxx (xxxx is version)
+                """
                 table_class = this.tables[str(o.__table__.name) + a_site]
 
             except AttributeError as e:
                 print(
                     GeneralException(
-                        "I0", "Backup accept only list of ORM objects", __name__))
+                        "I0",
+                        "Backup accept only list of ORM objects "
+                        "which contains table information",
+                        __name__))
                 return
 
             except KeyError:
+                """
+                tablename has not been cached/used
+                """
                 # tnl : table name list
                 tnl = this.ReflectTable(str(o.__table__.name + "_" + a_site))
 
@@ -117,42 +149,65 @@ class TableOp(object):
                 version = None
 
                 if tnl.__len__() > 0:
+                    """
+                    if has tablename in this sqlite db file,
+                    generate a new tablename table with version bumped + 1
+                    """
                     version = int(pat.search(tnl[-1]).group('version')) + 1
-                    tn = str(o.__table__.name + "_" + a_site + "_" +\
-                        str(version).zfill(4))
+                    tn = str(o.__table__.name + "_" + a_site + "_" +
+                             str(version).zfill(4))
                 else:
+                    """
+                    else the version of this tablename in this sqlite db file
+                    is 1
+                    """
                     version = 1
-                    tn = str(o.__table__.name + "_" + a_site + "_" +\
-                        str(version).zfill(4))
-
+                    tn = str(o.__table__.name + "_" + a_site + "_" +
+                             str(version).zfill(4))
 
                 # table = Table(tn, this.metadata)
+                """
+                safe the original table name.
+                then modify to the version added table name.
+                purpose is for copying the metadata
+                """
                 orig_name = o.__table__.name
                 o.__table__.name = tn
+                """
+                make a new table into this sqlite db file
+                """
                 table = o.__table__.tometadata(this.metadata)
+                """
+                save the original table name back.
+                """
                 o.__table__.name = orig_name
-                table.name = tn
+                # table.name = tn
 
-                # convert type from different database to sqlite supported type
+                # convert column type from
+                #   different database to sqlite supported type
                 for c in table.columns.values():
-                    if type(c.type) is NTEXT:
-                        c.type = this.ConvertType(NTEXT)()
-
+                    c.type = this.ConvertType(c.type)
+                    """
                     if type(c.type) is VARCHAR:
                         c.type = this.ConvertType(
                             VARCHAR)(255)
-
-                # for col in o.__table__.c:
-                #     table.append_column(col.copy())
-
-                this.tables[str(o.__table__.name) + a_site] =\
-                    type(tn, (this.Base,), {'__table__': table})
+                    """
 
                 # hack : do not create index, prevent same indexname
                 # created against different table_000x
                 table.indexes = set()
 
-                this.Base.metadata.create_all()
+                # for col in o.__table__.c:
+                #     table.append_column(col.copy())
+                """
+                cache the ORM class object
+                """
+                this.tables[str(o.__table__.name) + a_site] =\
+                    type(tn, (this.Base,), {'__table__': table})
+
+                table_class = this.tables[str(o.__table__.name) + a_site]
+
+                this.metadata.create_all()
 
             except Exception as e:
                 print(
@@ -161,13 +216,22 @@ class TableOp(object):
                 return
 
             # create ORM object against sqlite table
-            table_obj = this.tables[str(o.__table__.name) + a_site]()
+            # table_obj = this.tables[str(o.__table__.name) + a_site]()
+            table_obj = table_class()
+
             for col in o.__table__.c:
                 setattr(table_obj, col.name, getattr(o, col.name))
+
             try:
+                """
+                backup data into table
+                """
                 session.add(table_obj)
             except Exception as e:
-                print(SaException("SA", "session.add ORM object failed", __name__, e))
+                print(
+                    SaException(
+                        "SA",
+                        "session.add ORM object failed", __name__, e))
                 return
         try:
             session.commit()
@@ -176,10 +240,17 @@ class TableOp(object):
             return
 
     def ListTables(this):
+        """
+        List this TableOp instance's sqlite db file's tables
+        """
         this.metadata.reflect()
         return this.metadata.tables
 
     def ListVersion(this, a_datum_obj, a_site='pp'):
+        """
+        Pass in a ORM object, will list the table version for this
+            ORM object's table name
+        """
         table_in = a_datum_obj.__table__
 
         tnl = this.ReflectTable(str(table_in.name + "_" + a_site))
@@ -197,9 +268,9 @@ class TableOp(object):
 
     def Restore(this, a_datum_obj, a_site="pp", a_version=None):
         """
-        1. inspect the single obj's table
-        2. load latest table
-        3. select all and return the result
+        Passes in an ORM object. Base on the table information
+            in the ORM object, return all data/rows of this table.
+        If a_version is None, will use the latest version of this table.
         """
         pat = re.compile(a_site + "_(?P<version>\d{4})")
 
@@ -234,22 +305,24 @@ class TableOp(object):
             except KeyError as e:
                 if tnl.__len__() > 0:
                     tn = str(table_in.name + "_" + a_site + "_" + str(
-                        int(pat.search(tnl[-1]).group('version'))).\
-                            zfill(4))
+                        int(pat.search(tnl[-1]).group('version'))).
+                        zfill(4))
 
                     table = this.metadata.tables[tn]
 
                     from srm_db_tool.orm.srm import base
-                    table_c = base.GenTable(str(table.name), this.conn.GetEngine())
+                    table_c =\
+                        base.GenTable(str(table.name), this.conn.GetEngine())
 
                 else:
                     print(GeneralException(
                         'O0',
                         "Table : {}"
                         " has never been backedup"
-                        " in this sqlite db : {}".\
-                         format(table_in.name, this.params.PATH),
+                        " in this sqlite db : {}".
+                        format(table_in.name, this.params.PATH),
                         __name__))
+
                     return None
 
         session = this.conn.GetSession()
@@ -258,7 +331,10 @@ class TableOp(object):
         try:
             result = session.query(table_c).all()
         except Exception as e:
-            print(SaException("SA", "session.query failed against sqlite", __name__, e))
+            print(
+                SaException(
+                    "SA",
+                    "session.query failed against sqlite", __name__, e))
             return
         else:
             return result
@@ -269,12 +345,22 @@ class TableOp(object):
         try:
             session.delete(a_datum_obj)
         except Exception as e:
-            print(SaException("SA", "session.delete failed against sqlite", __name__, e))
+            print(
+                SaException(
+                    "SA",
+                    "session.delete failed against sqlite",
+                    __name__,
+                    e))
 
         try:
             session.commit()
         except Exception as e:
-            print(SaException("SA", "session.commit failed against sqlite", __name__, e))
+            print(
+                SaException(
+                    "SA",
+                    "session.commit failed against sqlite",
+                    __name__,
+                    e))
 
     def Debug(this):
         return this.metadata.tables
@@ -285,4 +371,4 @@ class TableOp(object):
         TODO:
             Make use for Context Managers
         """
-        this.conn.GetEngine().dispose()
+        this.conn.Dispose()

@@ -1,3 +1,11 @@
+from srm_db_tool.orm.fm import OrmFile
+
+OrmFile().GenOrmFile("pdr_planproperties", "srm")
+OrmFile().GenOrmFile("pdr_plancontents", "srm")
+OrmFile().GenOrmFile("pdr_protectiongroupmap", "srm")
+OrmFile().GenOrmFile("g_do_array", "srm")
+
+
 from srm_db_tool.orm.srm import pdr_planproperties
 from srm_db_tool.orm.srm import pdr_plancontents
 from srm_db_tool.orm.srm import pdr_protectiongroupmap

@@ -1,4 +1,4 @@
-from srm_db_tool.orm.base import GenTable
+from srm_db_tool.orm.gentable import GenTable
 
 
 class TheTable(object):

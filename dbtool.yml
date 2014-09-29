@@ -1,0 +1,47 @@
+sqlite_db_dir: '/tmp'
+
+#params_hq = Init_Params()
+#params_hq.DBTYPE = 'mssql'
+#params_hq.HOST = '10.20.233.103'
+#params_hq.UID = 'ad'
+#params_hq.PWD = 'ca$hc0w'
+#params_hq.DB = 'HQ_TEST'
+
+#pp_conn = MakeConn(params_hq)
+
+#params_rh = Init_Params()
+#params_rh.DBTYPE = 'mssql'
+#params_rh.HOST = '10.20.233.103'
+#params_rh.UID = 'ad'
+#params_rh.PWD = 'ca$hc0w'
+#params_rh.DB = '01_RH'
+#params_rh.DB = 'HR_TEST'
+
+#ss_conn = MakeConn(params_rh)
+# db related
+#
+srmdb_protect:
+    uid: ad
+    pwd: ca$hc0w
+    host: 10.20.233.103
+    # base on different dbtype, db_tool has it's default port set if don't provide one
+    #port:
+    # if dsn is set, use dsn, otherwise , use host/port to connect
+    #dsn: wa1
+    db: HQ_TEST
+    dbtype: mssql
+    #lang:
+    # for sqlite
+    #path
+
+srmdb_recovery:
+    uid: ad
+    pwd: ca$hc0w
+    host: 10.20.233.103
+    #port:
+    #dsn: wa2
+    db: HQ_TEST
+    dbtype: mssql
+    #lang:
+    # for sqlite
+    #path

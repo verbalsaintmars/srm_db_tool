@@ -27,15 +27,11 @@ Tool to deal with SRM DB
 ```
 
 ## Phase 2
-- [ ] Auto generate table files / list table files / rm table files
-```
-```
-- [ ] standalone lsrp rmrp srmtb(srm table backup) srmrt(srm recover table)
-```
-srmtb pp/ss tablename sqlite_db_file(default the latest sqlite db)
-srmrt pp/ss tablename
-```
-- [ ] standalone lsrp rmrp srmtb(srm table backup) srmrt(srm recover table)
+- [x] Auto generate table files / list table files / rm table files / consider no more
+    table .py files
+- [ ] centralize/each folder yaml file config
+- [ ] standalone backuptb / restoretb
+- [ ] standalone lsrp rmrp restorerp
 - [ ] Protection Group (lspg rmpg)
 
 

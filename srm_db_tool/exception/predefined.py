@@ -8,6 +8,8 @@ I0 : argument input error
 
 O0 : output value unexpected
 
+IO : io related errors
+
 S0 : System Error
 S1 : File Error
 

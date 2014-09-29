@@ -288,8 +288,8 @@ class TableOp(object):
             if result.__len__() == 1:
                 table = this.metadata.tables[result[0]]
 
-                from srm_db_tool.orm.srm import base
-                table_c = base.GenTable(str(table.name), this.conn.GetEngine())
+                from srm_db_tool.orm.srm import gentable
+                table_c = gentable.GenTable(str(table.name), this.conn.GetEngine())
 
             else:
                 print(GeneralException(
@@ -310,9 +310,9 @@ class TableOp(object):
 
                     table = this.metadata.tables[tn]
 
-                    from srm_db_tool.orm.srm import base
+                    from srm_db_tool.orm.srm import gentable
                     table_c =\
-                        base.GenTable(str(table.name), this.conn.GetEngine())
+                        gentable.GenTable(str(table.name), this.conn.GetEngine())
 
                 else:
                     print(GeneralException(

@@ -89,6 +89,12 @@ if result.site == "both":
               "Connection information provided.")
         sys.exit()
 
+import re
+ms_pat_1 = 'spt_'
+ms_pat_2 = 'MSreplication_options'
+ms_pat_1 = re.compile(ms_pat_1)
+ms_pat_2 = re.compile(ms_pat_2)
+
 
 def ReflectDb(a_site):
     from sqlalchemy.ext.declarative import declarative_base
@@ -127,12 +133,20 @@ if result.site == 'both':
 
         l_tables = ReflectDb('pp').tables
         for tname in l_tables:
+            if ms_pat_1.search(tname) is not None:
+                continue
+            if ms_pat_2.match(tname) is not None:
+                continue
             str_tname = unicodedata.normalize('NFKD', tname).\
                 encode('ascii', 'ignore')
             Delete(str_tname, 'pp', True)
 
         l_tables = ReflectDb('ss').tables
         for tname in l_tables:
+            if ms_pat_1.search(tname) is not None:
+                continue
+            if ms_pat_2.match(tname) is not None:
+                continue
             str_tname = unicodedata.normalize('NFKD', tname).\
                 encode('ascii', 'ignore')
             Delete(str_tname, 'ss', True)
@@ -145,6 +159,10 @@ elif result.site == 'pp':
     if result.table_name == 'all':
         l_tables = ReflectDb('pp').tables
         for tname in l_tables:
+            if ms_pat_1.search(tname) is not None:
+                continue
+            if ms_pat_2.match(tname) is not None:
+                continue
             str_tname = unicodedata.normalize('NFKD', tname).\
                 encode('ascii', 'ignore')
             Delete(str_tname, 'pp', True)
@@ -156,6 +174,10 @@ elif result.site == 'ss':
     if result.table_name == 'all':
         l_tables = ReflectDb('ss').tables
         for tname in l_tables:
+            if ms_pat_1.search(tname) is not None:
+                continue
+            if ms_pat_2.match(tname) is not None:
+                continue
             str_tname = unicodedata.normalize('NFKD', tname).\
                 encode('ascii', 'ignore')
             Delete(str_tname, 'ss', True)

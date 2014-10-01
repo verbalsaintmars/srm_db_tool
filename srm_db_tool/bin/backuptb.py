@@ -109,6 +109,12 @@ if result.site == "both":
               "Connection information provided.")
         sys.exit()
 
+import re
+ms_pat_1 = 'spt_'
+ms_pat_2 = 'MSreplication_options'
+ms_pat_1 = re.compile(ms_pat_1)
+ms_pat_2 = re.compile(ms_pat_2)
+
 
 def GetOrmClasses(a_site):
     from sqlalchemy.ext.declarative import declarative_base
@@ -126,7 +132,8 @@ def GetOrmClasses(a_site):
     ormClasses =\
         [GenTable(unicodedata.normalize('NFKD', t).
          encode('ascii', 'ignore'),
-         a_table=metadata.tables[t]) for t in metadata.tables]
+         a_table=metadata.tables[t]) for t in metadata.tables
+         if ms_pat_1.search(t) is None if ms_pat_2.match(t) is None]
     return ormClasses
 
 

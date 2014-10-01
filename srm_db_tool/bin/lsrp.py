@@ -1,4 +1,46 @@
-from srm_db_tool.orm.srm import pdr_planproperties
+import argparse
+from srm_db_tool.modules.tools.recovery_plan.argparse_parent \
+    import version_parser as parent_parser
+
+ap_args = {'prog': 'lsrp',
+           'description': 'List SRM recovery plans',
+           'epilog': 'Contact shc for any help.',
+           'fromfile_prefix_chars': '@',
+           'add_help': True,
+           'parents': [parent_parser]}
+
+parser = argparse.ArgumentParser(**ap_args)
+
+
+"""
+Table name arguement
+"""
+rpname_args = {'type': str,
+               'help': "type in table name to backup "
+               "or 'all' to restore the whole database"}
+
+parser.add_argument('rp_name', **rpname_args)
+
+
+"""
+which site to restore tables
+"""
+site_args = {'type': str,
+             'nargs': '?',
+             'default': 'both',
+             'choices': ['pp', 'ss'],
+             'help': "pp or ss for protected site or recovery site.\n"
+             "Default: %(default)s"}
+
+parser.add_argument('-s', '--site', **site_args)
+
+
+# result = parser.parse_args(["pds_table_name"])
+# result = parser.parse_args(['pdr_vminfo', '-f', 'testME.db'])
+# result = parser.parse_args(['all', '-f', 'all_pp.db', '-s', 'pp'])
+result = parser.parse_args()
+
+# -----------------------------------------------------------------
 
 from srm_db_tool.formatter.layout import PrintResult
 
@@ -7,6 +49,8 @@ from srm_db_tool.exception.predefined import SaException
 
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
+
+from srm_db_tool.orm.gentable import GenTable
 
 
 class ListRecoveryPlan(object):
@@ -22,10 +66,15 @@ class ListRecoveryPlan(object):
 
         if a_site == 'pp':
             session = this.pp_conn.GetSession()
-            pdr_planproperties_c = pdr_planproperties.GetTable(this.pp_conn.GetEngine())
+            pdr_planproperties_c = GenTable(
+                "pdr_planproperties",
+                this.pp_conn.GetEngine())
+
         if a_site == 'ss':
             session = this.ss_conn.GetSession()
-            pdr_planproperties_c = pdr_planproperties.GetTable(this.ss_conn.GetEngine())
+            pdr_planproperties_c = GenTable(
+                "pdr_planproperties",
+                this.ss_conn.GetEngine())
 
         if a_name is not None:
             try:
@@ -56,10 +105,8 @@ class ListRecoveryPlan(object):
             this.formatter.PrintValue(name_list, a_result)
         return a_result
 
-
     def pp(this, a_name=None):
         return this.PrintResult(this.ListSite("pp", a_name), a_name)
-
 
     def ss(this, a_name=None):
         return this.PrintResult(this.ListSite("ss", a_name), a_name)
@@ -87,15 +134,19 @@ class ListRecoveryPlan(object):
             else:
                 if pp_result is None:
                     print(
-                        "Can not find {} recovery plan on Protected Site ".\
-                            format(a_name))
+                        "Can not find {} recovery plan on Protected Site ".
+                        format(a_name))
+
                 if ss_result is None:
                     print(
-                        "Can not find {} recovery plan on Recovery Site ".\
-                            format(a_name))
+                        "Can not find {} recovery plan on Recovery Site ".
+                        format(a_name))
         else:
             p_set = {p_res.peerplanmoid for p_res in pp_result}
             s_set = {s_res.mo_id for s_res in ss_result}
             p_set &= s_set
-            result = [p_res for p_res in pp_result if p_res.peerplanmoid in p_set]
+
+            result =\
+                [p_res for p_res in pp_result if p_res.peerplanmoid in p_set]
+
             this.PrintResult(result, a_name)

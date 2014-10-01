@@ -45,46 +45,32 @@ site_args = {'type': str,
 
 parser.add_argument('-s', '--site', **site_args)
 
-
 # result = parser.parse_args(["pds_table_name"])
 # result = parser.parse_args(['pdr_vminfo', '-f', 'testME.db'])
-#result = parser.parse_args(['pd_moref', '-f', 'testME2.db'])
+# result = parser.parse_args(['pd_moref', '-f', 'testME2.db'])
 result = parser.parse_args()
 
-
-# ----------------------------------------------------------
-"""
-backuptb table_name {db file name} {pp,ss}
-backuptb all {db file name} {pp,ss}
-"""
-from srm_db_tool.config_mgr.parseyml import ParseYml
-
-ymlParser = ParseYml()
-p_result = ymlParser.LoadYml()
-
-SQLITE_DB_DIR = p_result[0]
-
-"""
-Already a Init_Param object
-"""
-DB_CONN_PP = p_result[1][0]
-DB_CONN_SS = p_result[1][1]
+from srm_db_tool.modules.tools.backup_restore_tb.ymlparsing\
+    import SQLITE_DB_DIR, DB_CONN_PP, DB_CONN_SS
 
 
+from srm_db_tool.modules.tools.backup_restore_tb.connection\
+    import MakeConns, CheckConns
 
-# ----------------------------------------------------------
-from srm_db_tool.sqlalchemy.make_conn import MakeConn
+pp_conn, ss_conn = MakeConns(DB_CONN_PP, DB_CONN_SS)
 
-pp_conn = None
-ss_conn = None
+if result.site == "both":
+    pp_msg = "Choose to back up both site, " +\
+             "but no complete Protected Site DB " +\
+             "Connection information provided."
+    ss_msg = "Choose to back up both site, " +\
+             "but no complete Recovery Site DB " +\
+             "Connection information provided."
+    CheckConns(pp_conn, ss_conn, pp_msg, ss_msg)
 
-if DB_CONN_PP is not None:
-    pp_conn = MakeConn(DB_CONN_PP)
+from srm_db_tool.modules.tools.backup_restore_tb.regex import *
 
-if DB_CONN_SS is not None:
-    ss_conn = MakeConn(DB_CONN_SS)
-
-
+# tableOp object init
 from srm_db_tool.backup_tables_mgr.dbop import TableOp
 from srm_db_tool.orm.gentable import GenTable
 
@@ -94,26 +80,6 @@ if result.file == 'default':
     tableOp = TableOp(a_default_path=SQLITE_DB_DIR)
 else:
     tableOp = TableOp(a_dbfile=result.file, a_default_path=SQLITE_DB_DIR)
-
-
-import sys
-if result.site == "both":
-    if pp_conn is None:
-        print("Choose to back up both site, "
-              "but no complete protected Site DB "
-              "Connection information provided.")
-        sys.exit()
-    if ss_conn is None:
-        print("Choose to back up both site, "
-              "but no complete recovery Site DB "
-              "Connection information provided.")
-        sys.exit()
-
-import re
-ms_pat_1 = 'spt_'
-ms_pat_2 = 'MSreplication_options'
-ms_pat_1 = re.compile(ms_pat_1)
-ms_pat_2 = re.compile(ms_pat_2)
 
 
 def GetOrmClasses(a_site):

@@ -11,14 +11,6 @@ import re
 
 from sqlalchemy.ext.declarative import declarative_base
 
-# General Types
-# from sqlalchemy import VARCHAR  # Latin1_General_CI_AS
-from sqlalchemy import UnicodeText
-
-# DB Specific types
-# MS SQL
-from sqlalchemy.dialects.mssql import NTEXT
-
 
 # tableName_pp_0001
 # tableName_ss_0001
@@ -52,7 +44,7 @@ class TableOp(object):
             this.Dispose()
             return False
 
-    def __init__(this, a_dbfile=None):
+    def __init__(this, a_dbfile=None, a_default_path=None):
         """
         a_dbfile is the sqlite db file
         """
@@ -60,9 +52,13 @@ class TableOp(object):
         this.params.DBTYPE = 'sqlite'
 
         if a_dbfile is None:
-            this.params.PATH = DbFileOp().NextFileName()
+            this.params.PATH =\
+                DbFileOp(a_default_path=a_default_path).NextFileName()
         else:
-            this.params.PATH = a_dbfile
+            from os.path import join
+            this.params.PATH =\
+                join(a_default_path if a_default_path is not None else "",
+                     a_dbfile)
 
         this.conn = MakeConn(this.params)
 
@@ -74,19 +70,33 @@ class TableOp(object):
         # table name : table class, table class has version info from it's name
         this.tables = {}
 
-    def ConvertType(this, a_type):
+    def _ConvertType(this, a_type):
         """
         Convert from different Database's
             column type to compatible sqlite column type
         """
+        # General Types
+
+        # Latin1_General_CI_AS issue
+        from sqlalchemy import VARCHAR as General_VARCHAR
+        from sqlalchemy import UnicodeText
+
+        # DB Specific types
+        # MS SQL
+        from sqlalchemy.dialects.mssql import VARCHAR as MSSQL_VARCHAR
+        from sqlalchemy.dialects.mssql import NTEXT as MSSQL_NTEXT
+
         try:
-            return {
-                NTEXT: UnicodeText
-            }[a_type]
+            result = {
+                MSSQL_NTEXT: UnicodeText(),
+                MSSQL_VARCHAR: General_VARCHAR(255)
+            }[type(a_type)]
+            return result
         except KeyError:
+            # print("hhhh" + str(type(a_type)))
             return a_type
 
-    def ReflectTable(this, a_table_name):
+    def _ReflectTable(this, a_table_name):
         """
         Reflect the a_table_name_xxxx (xxxx is version) schema(s)
             base on this instance's engine connetion
@@ -142,7 +152,7 @@ class TableOp(object):
                 tablename has not been cached/used
                 """
                 # tnl : table name list
-                tnl = this.ReflectTable(str(o.__table__.name + "_" + a_site))
+                tnl = this._ReflectTable(str(o.__table__.name + "_" + a_site))
 
                 # tn : table name
                 tn = None
@@ -186,10 +196,11 @@ class TableOp(object):
                 # convert column type from
                 #   different database to sqlite supported type
                 for c in table.columns.values():
-                    c.type = this.ConvertType(c.type)
+                    #print("hahahahha: " + c.type)
+                    c.type = this._ConvertType(c.type)
                     """
                     if type(c.type) is VARCHAR:
-                        c.type = this.ConvertType(
+                        c.type = this._ConvertType(
                             VARCHAR)(255)
                     """
 
@@ -253,7 +264,7 @@ class TableOp(object):
         """
         table_in = a_datum_obj.__table__
 
-        tnl = this.ReflectTable(str(table_in.name + "_" + a_site))
+        tnl = this._ReflectTable(str(table_in.name + "_" + a_site))
 
         pat = re.compile(a_site + "_(?P<version>\d{4})")
 
@@ -276,7 +287,7 @@ class TableOp(object):
 
         table_in = a_datum_obj.__table__
 
-        tnl = this.ReflectTable(str(table_in.name + "_" + a_site))
+        tnl = this._ReflectTable(str(table_in.name + "_" + a_site))
 
         table_c = None
 
@@ -289,16 +300,19 @@ class TableOp(object):
                 table = this.metadata.tables[result[0]]
 
                 from srm_db_tool.orm.srm import gentable
-                table_c = gentable.GenTable(str(table.name), this.conn.GetEngine())
+                table_c =\
+                    gentable.GenTable(str(table.name), this.conn.GetEngine())
 
             else:
+                """
                 print(GeneralException(
                     'O0',
                     "No version {} of table : {} found".format(
                         a_version,
                         table_in.name),
                     __name__))
-                return
+                """
+                return None
         else:
             try:
                 table_c = this.tables[str(table_in.name) + a_site]
@@ -310,11 +324,14 @@ class TableOp(object):
 
                     table = this.metadata.tables[tn]
 
-                    from srm_db_tool.orm.srm import gentable
+                    from srm_db_tool.orm.gentable import GenTable
                     table_c =\
-                        gentable.GenTable(str(table.name), this.conn.GetEngine())
+                        GenTable(
+                            str(table.name),
+                            this.conn.GetEngine())
 
                 else:
+                    """
                     print(GeneralException(
                         'O0',
                         "Table : {}"
@@ -322,7 +339,7 @@ class TableOp(object):
                         " in this sqlite db : {}".
                         format(table_in.name, this.params.PATH),
                         __name__))
-
+                    """
                     return None
 
         session = this.conn.GetSession()
@@ -335,9 +352,12 @@ class TableOp(object):
                 SaException(
                     "SA",
                     "session.query failed against sqlite", __name__, e))
-            return
+            return None
         else:
-            return result
+            if result.__len__() == 0:
+                return None
+            else:
+                return result
 
     def Remove(this, a_datum_obj):
         session = this.conn.GetSession()

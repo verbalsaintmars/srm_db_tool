@@ -62,8 +62,8 @@ class DbFileOp(object):
         else:
             return join(this.path, "sqlite_db_0001.db")
 
-    def LatestFileName(this):
-        db_files = this.GetFileName(a_fullpath=True)
+    def LatestFileName(this, a_fullpath=True):
+        db_files = this.GetFileName(a_fullpath=a_fullpath)
         if db_files.__len__() != 0:
             return db_files[-1]
         else:

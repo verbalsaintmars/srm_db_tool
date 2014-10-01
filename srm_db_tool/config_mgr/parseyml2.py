@@ -48,7 +48,7 @@ class ParseYml(object):
                     site_param.HOST = a_result_dict[site_val]['host']
                 except:
                     print("Neither DSN or Host is provided for " + site_val)
-                    # srm_pp = None
+                    #srm_pp = None
                     site_param = None
                 else:
                     try:
@@ -59,12 +59,13 @@ class ParseYml(object):
                         site_param.DB = a_result_dict[site_val]['db']
                     except:
                         print("Provided host for " + site_val + " but no db provided.")
-                        # srm_pp = None
+                        #srm_pp = None
                         site_param = None
+
 
         except KeyError as ke:
             print("{" + ke.message + "}" + " attribute does not exist")
-            # srm_pp = None
+            #srm_pp = None
             site_param = None
 
         return site_param
@@ -112,17 +113,14 @@ class ParseYml(object):
             fd = open(join(getcwd(), this.default_yml_file), 'r')
         except Exception as e:
             print(GeneralException(
-                  "IO",
-                  "Could not load " + this.default_yml_file,
-                  __name__))
+                "IO",
+                "Could not load " + this.default_yml_file,
+                 __name__))
             return
 
         result_dict = yaml.load(fd, Loader=Loader)
 
         sqlite_db_dir = this._DbDirParser(result_dict)
-        """
-        result is already a Init_Params object :-)
-        """
-        srm_result = this._SrmParser(result_dict)
+        srm_result = this._SrmParser(result_dict
 
         return (sqlite_db_dir, srm_result)

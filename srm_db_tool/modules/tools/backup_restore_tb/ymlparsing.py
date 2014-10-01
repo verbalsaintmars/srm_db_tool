@@ -7,6 +7,10 @@ from srm_db_tool.config_mgr.parseyml import ParseYml
 ymlParser = ParseYml()
 p_result = ymlParser.LoadYml()
 
+if p_result is None:
+    import sys
+    sys.exit()
+
 SQLITE_DB_DIR = p_result[0]
 
 """

@@ -54,8 +54,6 @@ class RestoreRecoveryPlan(object):
         pg_result = this.tableop.Restore(this.pdr_protectiongroupmap_c, a_site)
         g_do_array_result = this.tableop.Restore(this.g_do_array_c, a_site)
 
-        print("hahah: " + str(g_do_array_result.__len__()))
-
         pdr_pp = [r for r in pp_result if r.name == a_name][0]
 
         pdr_pc = [r for r in pc_result if r.db_id == pdr_pp.contents][0]
@@ -64,15 +62,11 @@ class RestoreRecoveryPlan(object):
             [r for r in g_do_array_result
              if r.seq_id == pdr_pc.protectiongroups]
 
-        print("hahah2: " + str(go_id_list.__len__()))
-
         pdr_pg_list = []
 
         for go_id in go_id_list:
             pdr_pg_list.append(
                 [r for r in pg_result if r.db_id == go_id.db_id][0])
-
-        print("hahah3: " + str(pdr_pg_list.__len__()))
 
         session = None
 

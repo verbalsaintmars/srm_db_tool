@@ -66,7 +66,7 @@ class Init_Params(object):
 
     def GetLANG(this):
         try:
-            return this.dsn
+            return this.lang
         except:
             return None
 

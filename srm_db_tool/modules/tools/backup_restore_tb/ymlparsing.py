@@ -5,6 +5,11 @@ backuptb all {db file name} {pp,ss}
 from srm_db_tool.config_mgr.parseyml import ParseYml
 
 ymlParser = ParseYml()
+
+"""
+p_result:
+    (sqlite_db_dir, (protection site Init_Params, recovery site Init_Params))
+"""
 p_result = ymlParser.LoadYml()
 
 if p_result is None:

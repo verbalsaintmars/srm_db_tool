@@ -68,6 +68,9 @@ if result.site == "both":
              "Connection information provided."
     CheckConns(pp_conn, ss_conn, pp_msg, ss_msg)
 
+"""
+import ms_pat_1 and ms_pat_2
+"""
 from srm_db_tool.modules.tools.backup_restore_tb.regex import *
 
 # tableOp object init

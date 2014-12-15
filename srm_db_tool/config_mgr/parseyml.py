@@ -39,6 +39,19 @@ class ParseYml(object):
 
         try:
             site_param.DBTYPE = a_result_dict[site_val]['dbtype']
+
+            """
+            If DBTYPE is sqlite, probe path instead.
+            """
+            if site_param.DBTYPE == 3:
+                try:
+                    site_param.PATH = a_result_dict[site_val]['path']
+                    return site_param
+                except:
+                    print("No sqlite db file provided for " + site_val)
+                    # srm_pp = None
+                    raise
+
             site_param.UID = a_result_dict[site_val]['uid']
             site_param.PWD = a_result_dict[site_val]['pwd']
             try:
@@ -49,7 +62,7 @@ class ParseYml(object):
                 except:
                     print("Neither DSN or Host is provided for " + site_val)
                     # srm_pp = None
-                    site_param = None
+                    raise
                 else:
                     try:
                         site_param.PORT = a_result_dict[site_val]['port']
@@ -58,9 +71,10 @@ class ParseYml(object):
                     try:
                         site_param.DB = a_result_dict[site_val]['db']
                     except:
-                        print("Provided host for " + site_val + " but no db provided.")
+                        print("Provided host for " + site_val +
+                              " but no db provided.")
                         # srm_pp = None
-                        site_param = None
+                        raise
 
         except KeyError as ke:
             print("{" + ke.message + "}" + " attribute does not exist")
@@ -102,15 +116,26 @@ class ParseYml(object):
         except KeyError as ke:
             print("{" + ke.message + "}" + " attribute does not exist")
             print("using system's tmp director for sqlite db files")
+            import tempfile
+            """
+            No sqlite_db_dir mentioned in the yaml file,
+            thus use default system temp directory.
+            """
+            sqlite_db_dir = tempfile.gettempdir()
+
         return sqlite_db_dir
 
     def LoadYml(this):
+        """
+        Return a tuple:
+            (sqlite_db_dir, (primary Init_Params, secondary Init_Params) )
+        """
 
         fd = None
 
         try:
             fd = open(join(getcwd(), this.default_yml_file), 'r')
-        except Exception as e:
+        except Exception:
             print(GeneralException(
                   "IO",
                   "Could not load " + this.default_yml_file,
@@ -120,8 +145,9 @@ class ParseYml(object):
         result_dict = yaml.load(fd, Loader=Loader)
 
         sqlite_db_dir = this._DbDirParser(result_dict)
+
         """
-        result is already a Init_Params object :-)
+        srm_result is already an Init_Params object :-)
         """
         srm_result = this._SrmParser(result_dict)
 

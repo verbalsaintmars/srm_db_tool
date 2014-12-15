@@ -17,7 +17,7 @@ Tool to deal with SRM DB
 ## Phase 1
 - [x] Create fake sqlite tables
 - [x] Backup Framework / sqlite
-- [ ] Configuration Interface - use python structure for now
+- [x] Configuration Interface - use python structure for now
 - [x] Manipulate Recovery Plan
 ```
    lsrp
@@ -29,14 +29,12 @@ Tool to deal with SRM DB
 ## Phase 2
 - [x] Auto generate table files / list table files / rm table files / consider no more
     table .py files
-- [ ] centralize/each folder yaml file config
-- [ ] standalone backuptb / restoretb
-- [ ] standalone lsrp rmrp restorerp
-- [ ] Protection Group (lspg rmpg)
+- [x] centralize/each folder yaml file config
+- [x] standalone backuptb / restoretb
+- [x] standalone lsrp rmrp restorerp
 
 
 ## Phase 3
-1. daemonize
-2. GUI / Qt
-3. As a vApp bundle
+- [ ] sqlite db metadata
+- [ ] Protection Group (lspg rmpg)
 

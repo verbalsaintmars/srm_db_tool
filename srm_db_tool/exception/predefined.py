@@ -15,6 +15,8 @@ S1 : File Error
 
 SA : SqlAlchemy error
 
+DB: Dump DB manipulation error
+
 U0 : Unknown error
 """
 
@@ -40,3 +42,14 @@ class SaException(Exception):
     def __str__(this):
         return SA_EXCEPT_FORMAT.format(
             this.err, this.message, this.name, this.sae.message)
+
+
+class FixbyModuleException(Exception):
+    def __init__(this, a_err, a_msg, a_name):
+        super(FixbyModuleException, this).__init__(a_msg)
+        this.err = a_err
+        this.name = a_name
+
+    def __str__(this):
+        return GENERAL_EXCEPT_FORMAT.format(
+            this.err, this.message, this.name)

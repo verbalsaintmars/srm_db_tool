@@ -3,12 +3,16 @@ from sqlalchemy.schema import PrimaryKeyConstraint
 from sqlalchemy import Table, MetaData
 
 
-def GenTable(a_table_name, a_engine=None, a_table=None):
+def GenTable(a_table_name, a_engine=None, a_table=None, a_base=None):
 
     if a_table is not None:
         __table__ = a_table
     else:
-        __table__ = Table(a_table_name, MetaData(bind=a_engine), autoload=True)
+        if a_base is not None and a_base.metadata.is_bound():
+            __table__ = Table(a_table_name, a_base.metadata, autoload=True)
+        else:
+            __table__ = Table(a_table_name, MetaData(bind=a_engine),
+                              autoload=True)
 
     if __table__.primary_key.__len__() == 0:
         """
@@ -44,7 +48,11 @@ def GenTable(a_table_name, a_engine=None, a_table=None):
     """
     Dynamic generate table ORM class object
     """
-    return type(a_table_name, (declarative_base(),),
+    return type(a_table_name,
+                (a_base
+                    if a_base is not None
+                    and a_base.metadata.is_bound() is True
+                    else declarative_base(),),
                 {'__table__': __table__,
                  '__str__': __str__,
                  '__val_dict__': __val_dict__})

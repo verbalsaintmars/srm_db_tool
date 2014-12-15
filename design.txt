@@ -1,0 +1,42 @@
+dbop:
+
+write sqlite meta data:
+1. SRM version
+2. Site
+3. Workflow component : components / all dump
+3. lock (if lock , can not override, cannot fix)
+4. PR/SR number
+5. KB Link
+6. fix provided tag / fixed by which module
+4. description
+
+
+Meta Table:
+* srmVersion
+
+* site
+
+* dumpType
+    all, recovery_plan, protection_group
+
+* lock
+    0/1
+
+* prNumber
+
+* kbUrl
+
+* pairDbFile
+
+* description
+
+
+
+FixBy table:
+id
+module
+desc
+
+
+以下:
+combine with dbop

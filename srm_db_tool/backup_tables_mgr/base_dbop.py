@@ -1,5 +1,5 @@
 from srm_db_tool.backup_tables_mgr.meta_table import \
-    GenTableParam
+    meta_table_name, fixby_table_name, GenMetaTableParam
 
 from srm_db_tool.backup_tables_mgr.module import Module
 
@@ -19,7 +19,6 @@ class BaseDbOp(object):
     __metaclass__ = ABCMeta
 
     def __init__(this):
-        print("new_2")
         this.params = Init_Params()
         this.base = declarative_base()
         this.metadata = this.base.metadata
@@ -68,20 +67,26 @@ class BaseDbOp(object):
         """
         Construct meta_table ORM type
         """
+
+        table_param = None
+        table_obj = None
         table_param = None
 
-        if a_table_name == "meta":
-            table_param = GenTableParam("meta")
+        table_name = \
+            {"meta": meta_table_name, "fixby": fixby_table_name}[a_table_name]
 
-        if a_table_name == "fixby":
-            table_param = GenTableParam("fixby")
-
-        table_name, cols = table_param.NAME, table_param.COLS
-
-        table_obj = a_table if a_table else Table(
-            table_name,
-            this.metadata,
-            *cols)
+        if a_table is not None:
+            table_obj = a_table
+        else:
+            if a_table_name == "meta":
+                table_param = GenMetaTableParam("meta")
+            if a_table_name == "fixby":
+                table_param = GenMetaTableParam("fixby")
+            table_obj = Table(
+                table_name,
+                # MetaData(),
+                this.metadata,
+                *table_param.COLS)
 
         return GenTable(
             table_name,
@@ -89,6 +94,7 @@ class BaseDbOp(object):
             a_base=this.base)
 
     def ListTables(this):
+
         """
         List db tables
         """
@@ -118,16 +124,21 @@ class BaseDbOp(object):
                 """
                 table = o.__table__.tometadata(this.metadata)
 
+                # hack : do not create index, prevent same indexname
+                # created against different table_000x
+                table.indexes = set()
+                """
+                for i in table.indexes:
+                    i.drop()
+                """
+
                 """
                 Run _convertType: different Database has different type
                     conversion
                 """
                 for c in table.columns.values():
+                    c.index = False
                     c.type = this._convertType(c.type)
-
-                # hack : do not create index, prevent same indexname
-                # created against different table_000x
-                table.indexes = set()
 
                 # for col in o.__table__.c:
                 #     table.append_column(col.copy())
@@ -145,7 +156,14 @@ class BaseDbOp(object):
                 """
                 Create the schema into the database
                 """
-                this.metadata.create_all()
+                try:
+                    this.metadata.create_all()
+                except Exception as e:
+                    print(
+                        SaException(
+                            "SA",
+                            "metadata.create_all() failed", __name__, e))
+                    return
 
             # create ORM object from ORM type
             table_obj = table_class()
@@ -246,37 +264,34 @@ class BaseDbOp(object):
         If table does not exist in the current sqlite db file,
         will create the table(s) schema.
         """
-        print("new_3")
         this.metadata.reflect()
 
         meta_table_result = filter(
-            lambda t: str(t.name) == meta_table_param.NAME,
+            lambda t: str(t.name) == meta_table_name,
             this.metadata.tables.values())
 
         fixby_table_result = filter(
-            lambda t: str(t.name) == fixby_table_param.NAME,
+            lambda t: str(t.name) == fixby_table_name,
             this.metadata.tables.values())
 
-        print("new_4")
         create_table_flag = 0
 
         if meta_table_result.__len__() == 0:
             """
             this sqlite db file does not contain meta table
             """
-
-            print("new_5")
             this.meta_table_c = this._gen_meta_table_c("meta")
+            this.meta_table_c.__table__.indexes = set()
             create_table_flag |= 1
 
         else:
-            print("new_6")
             this.meta_table_c = this._gen_meta_table_c(
                 "meta",
                 meta_table_result[0])
 
         if fixby_table_result.__len__() == 0:
             this.fixby_table_c = this._gen_meta_table_c("fixby")
+            this.fixby_table_c.__table__.indexes = set()
             create_table_flag |= 2
         else:
             this.fixby_table_c = this._gen_meta_table_c(

@@ -2,8 +2,8 @@ from setuptools import setup
 
 setup(
     name='srm_db_probe',
-    version='1.0.0',
-    description='SRM DB Probe Project',
+    version='1.0.1',
+    description='SRM DB Probe Kit Project',
     url=r'https://github.com/verbalsaintmars/srm_db_tool',
     author='shchang',
     author_email=r'shchang@vmware.com',

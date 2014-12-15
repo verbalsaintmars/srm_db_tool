@@ -23,16 +23,19 @@ class Table_Param(object):
     NAME = property(GetTableName, SetTableName)
     COLS = property(GetTableColumns, SetTableColumns)
 
+meta_table_name = 'srm_meta_table'
+fixby_table_name = 'srm_meta_table_fixby'
 
-def GenTableParam(a_name):
+
+def GenMetaTableParam(a_name):
     """
     Generate table parameter struct
     """
     table_param = Table_Param()
     if a_name == "meta":
-        table_param.NAME = "srm_meta_table"
+        table_param.NAME = meta_table_name
         table_param.COLS = \
-            (Column("version", String, primary_key=True),
+            (Column("version", String(50), primary_key=True, index=False),
              Column('site', String),
              Column('pairDbFile', String),
              Column('dumpType', String),
@@ -41,7 +44,7 @@ def GenTableParam(a_name):
              Column('kbUrl', String),
              Column('desc', String))
     if a_name == "fixby":
-        table_param.NAME = "srm_meta_table_fixby"
+        table_param.NAME = fixby_table_name
         table_param.COLS = \
             (Column("id", Integer, primary_key=True),  # will auto increase
              Column('module', String),

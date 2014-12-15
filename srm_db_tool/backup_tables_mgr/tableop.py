@@ -47,9 +47,7 @@ class TableOp(object):
         """
         if not a_force:
             if this.dbOp.LOCK and this.dbOp.LOCK != 0:
-                print("db dump : {} has backed up data.\n"
-                      "Please choose a new db for backup.\n"
-                      .format(this.dbOp.DBFILEPATH))
+                print("The backedup database is in lock mode.")
                 return
 
         try:
@@ -70,8 +68,9 @@ class TableOp(object):
 
         try:
             this.dbOp.Backup(a_value_list)
-        except:
-            print("to be implemented...")
+        except Exception as e:
+            print(GeneralException(
+                "U0", "dbOp.Backup exception.", __name__))
         else:
             this.dbOp.LOCK = 1
 

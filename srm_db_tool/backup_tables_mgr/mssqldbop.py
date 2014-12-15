@@ -2,6 +2,14 @@ from srm_db_tool.sqlalchemy.make_conn import MakeConn
 from srm_db_tool.backup_tables_mgr.base_dbop import \
     BaseDbOp
 
+# General Types
+# Latin1_General_CI_AS issue
+from sqlalchemy import VARCHAR as General_VARCHAR
+# DB Specific types
+# MS SQL
+from sqlalchemy.dialects.mssql import VARCHAR as MSSQL_VARCHAR
+from sqlalchemy.dialects.mssql import NTEXT as MSSQL_NTEXT
+
 
 class MssqlDbOp(BaseDbOp):
     """
@@ -24,10 +32,16 @@ class MssqlDbOp(BaseDbOp):
 
     def _convertType(this, a_type):
         """
-        Convert from different Database's
-            column type to compatible sqlite column type
+        Even in mssql , column type should be altered~
         """
-        return a_type
+        try:
+            result = {
+                MSSQL_NTEXT: General_VARCHAR(255),
+                MSSQL_VARCHAR: General_VARCHAR(255)
+            }[type(a_type)]
+            return result
+        except KeyError:
+            return a_type
 
     def Dispose(this):
         this.conn.Dispose()

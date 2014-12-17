@@ -91,6 +91,9 @@ class TableOp(object):
              "kburl": this.dbOp.KBURL,
              "desc": this.dbOp.DESC}
 
+    def SetFixByModule(this, a_module):
+        this.dbOp.MODULE = a_module
+
     def GetFixByModule(this):
         return this.dbOp.MODULE
 

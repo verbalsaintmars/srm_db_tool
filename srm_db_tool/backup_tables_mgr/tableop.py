@@ -58,13 +58,20 @@ class TableOp(object):
             print(e)
             return
 
-        this.dbOp.VERSION = a_version
-        this.dbOp.SITE = a_site
-        this.dbOp.DUMPTYPE = a_dumpType
-        this.dbOp.PAIRDB = a_pairdb
-        this.dbOp.PRNUM = a_prNum
-        this.dbOp.KBURL = a_kburl
-        this.dbOp.DESC = a_desc
+        if not this.dbOp.VERSION:
+            this.dbOp.VERSION = a_version
+        if not this.dbOp.SITE:
+            this.dbOp.SITE = a_site
+        if not this.dbOp.DUMPTYPE:
+            this.dbOp.DUMPTYPE = a_dumpType
+        if not this.dbOp.PAIRDB:
+            this.dbOp.PAIRDB = a_pairdb
+        if not this.dbOp.PRNUM:
+            this.dbOp.PRNUM = a_prNum
+        if not this.dbOp.KBURL:
+            this.dbOp.KBURL = a_kburl
+        if not this.dbOp.DESC:
+            this.dbOp.DESC = a_desc
 
         try:
             this.dbOp.Backup(a_value_list)

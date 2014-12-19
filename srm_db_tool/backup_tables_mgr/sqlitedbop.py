@@ -18,11 +18,10 @@ class SqliteDbOp(BaseDbOp):
     """
     Manipulate sqlite database file
     """
-    def __init__(this, a_dbfile, a_path=None):
+    def __init__(this, a_dbfile=None, a_path=None):
         """
         a_path : sqlite db file path
         """
-        print("new_1")
         super(SqliteDbOp, this).__init__()
 
         sqlite_db_path = None

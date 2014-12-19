@@ -21,5 +21,14 @@ SQLITE_DB_DIR = p_result[0]
 """
 Already a Init_Param object
 """
-DB_CONN_PP = p_result[1][0]
-DB_CONN_SS = p_result[1][1]
+DB_CONN_PP = None
+DB_CONN_SS = None
+try:
+    DB_CONN_PP = p_result[1][0]
+except Exception as e:
+    print(e)
+
+try:
+    DB_CONN_SS = p_result[1][1]
+except Exception as e:
+    print(e)

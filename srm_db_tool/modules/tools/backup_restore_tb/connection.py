@@ -11,11 +11,8 @@ def MakeConns(a_param_pp, a_param_ss):
     return (pp_conn, ss_conn)
 
 
-def CheckConns(a_pp_conn, a_ss_conn, a_msg_pp, a_msg_ss):
-    import sys
-    if a_pp_conn is None:
-        print(a_msg_pp)
-        sys.exit()
-    if a_ss_conn is None:
-        print(a_msg_ss)
-        sys.exit()
+def CheckConns(a_conn):
+    if a_conn is None:
+        return False
+    else:
+        return True

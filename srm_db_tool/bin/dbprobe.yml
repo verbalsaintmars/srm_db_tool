@@ -23,25 +23,25 @@ sqlite_db_dir: 'c:\'
 srmdb_protect:
     uid: ad
     pwd: ca$hc0w
-    host: 10.20.233.103
+    #host: 10.20.233.103
     # base on different dbtype, db_tool has it's default port set if don't provide one
     #port:
     # if dsn is set, use dsn, otherwise , use host/port to connect
-    #dsn: wa1
-    db: HQ_TEST
+    dsn: fun_db
+    #db: HQ_TEST
     dbtype: mssql
     #lang:
     # for sqlite
     #path
 
-srmdb_recovery:
-    uid: ad
-    pwd: ca$hc0w
-    host: 10.20.233.103
+#srmdb_recovery:
+#    uid: ad
+#    pwd: ca$hc0w
+#    host: 10.20.233.103
     #port:
     #dsn: wa2
-    db: HR_TEST
-    dbtype: mssql
+#    db: HR_TEST
+#    dbtype: mssql
     #lang:
     # for sqlite
     #path

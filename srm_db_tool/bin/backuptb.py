@@ -4,7 +4,7 @@ from srm_db_tool.modules.tools.backup_restore_tb.argparse_parent \
 
 ap_args = {'prog': 'backuptb',
            'description': 'Backup SRM database tables',
-           'epilog': 'Contact shc for any help.',
+           'epilog': 'Contact VMWare/CPD/SRM team for help.',
            'fromfile_prefix_chars': '@',
            'add_help': True,
            'parents': [parent_parser]}
@@ -74,15 +74,19 @@ import ms_pat_1 and ms_pat_2
 from srm_db_tool.modules.tools.backup_restore_tb.regex import *
 
 # tableOp object init
+from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
 from srm_db_tool.backup_tables_mgr.dbop import TableOp
 from srm_db_tool.orm.gentable import GenTable
 
+sqlop = None
 tableOp = None
 
 if result.file == 'default':
-    tableOp = TableOp(a_default_path=SQLITE_DB_DIR)
+    sqlop = SqliteDbOp(a_path=SQLITE_DB_DIR)
+    tableOp = TableOp(sqlop)
 else:
-    tableOp = TableOp(a_dbfile=result.file, a_default_path=SQLITE_DB_DIR)
+    sqlop = SqliteDbOp(result.file, SQLITE_DB_DIR)
+    tableOp = TableOp(sqlop)
 
 
 def GetOrmClasses(a_site):
@@ -117,7 +121,9 @@ if result.site == 'both':
         for orm_c in GetOrmClasses('pp'):
             result = session_pp.query(orm_c).all()
             if result is not None:
-                tableOp.Backup(result, 'pp')
+                tableOp.Backup(
+                    result,
+                    'pp')
 
         session_ss = ss_conn.GetSession()
         for orm_c in GetOrmClasses('ss'):

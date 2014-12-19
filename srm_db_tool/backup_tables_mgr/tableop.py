@@ -90,7 +90,7 @@ class TableOp(object):
     def GetMetaData(this):
         return \
             {"version": this.dbOp.VERSION,
-             "site": this.dbOP.SITE,
+             "site": this.dbOp.SITE,
              "lock": this.dbOp.LOCK,
              "pairDB": this.dbOp.PAIRDB,
              "dumptype": this.dbOp.DUMPTYPE,

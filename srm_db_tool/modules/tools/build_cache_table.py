@@ -15,6 +15,8 @@ def BuildCache(a_conn, a_file):
              for t in base.metadata.tables
              if ms_pat_1.search(t) is None if ms_pat_2.match(t) is None])
 
+    print("Building table cache file...")
+
     with open(a_file+'.py', 'w') as f:
         f.write('tables = {\n')
 

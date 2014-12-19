@@ -52,4 +52,6 @@ restoretb
 
 
 3.
-
+================
+1.
+tableop add check lock status

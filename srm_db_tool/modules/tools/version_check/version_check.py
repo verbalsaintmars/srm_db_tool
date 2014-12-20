@@ -13,14 +13,23 @@ since we are inspecting the DB dynamically.
 from srm_db_tool.orm.gentable import GenTable
 
 
-def GetSrmVersion(a_conn, a_base=None):
+def GetSrmVersion(a_conn, a_site, a_base=None):
+    """
+    Return SRM version / data versio info.
+    Will not throw
+    """
     session = a_conn.GetSession()
     engine = a_conn.GetEngine()
 
-    dr_product_info_c = GenTable(
-        "dr_product_info",
-        a_engine=engine,
-        a_base=a_base)
+    try:
+        dr_product_info_c = GenTable(
+            "dr_product_info",
+            a_engine=engine,
+            a_base=a_base)
+    except:
+        print("\nNo version information from the {} database...\n".
+              format("protection site" if a_site == 'pp' else "recovery site"))
+        return (0, 0)
 
     list_data = [(o.name, o.value) for o in
                  session.query(dr_product_info_c).all()]

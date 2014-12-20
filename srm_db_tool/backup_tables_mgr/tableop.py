@@ -111,14 +111,22 @@ class TableOp(object):
         """
         return this.dbOp.Restore(a_table_name)
 
-    def Remove(this, a_table_name):
+    def Remove(this, a_table_name, a_force=False):
         """
         Remove data from table.
         This is not dropping the table.
         """
-        this.dbOp.LOCK = 0
-        num_rows = this.dbOp.Remove(a_table_name)
-        this.dbOp.LOCK = 1
+        num_rows = None
+
+        if this.dbOp.LOCK:
+            if a_force is True:
+                this.dbOp.LOCK = 0
+                num_rows = this.dbOp.Remove(a_table_name)
+                this.dbOp.LOCK = 1
+            else:
+                num_rows = 0
+        else:
+            num_rows = this.dbOp.Remove(a_table_name)
 
         return num_rows
 

@@ -70,8 +70,8 @@ which site to dump tables
 """
 site_args = {'type': str,
              'nargs': '?',
-             'default': 'both',
-             'choices': ['both', 'pp', 'ss'],
+             'default': 'pp',
+             'choices': ['pp', 'ss'],
              'help': "pp or ss for protected site or recovery site.\n"
              "Default: %(default)s"}
 
@@ -144,14 +144,6 @@ pp_msg = "No complete Protected Site DB " +\
 ss_msg = "No complete Secondary Site DB " +\
          "Connection information provided."
 
-if arg_result.site == "both":
-    if not (conn_flag & 1):
-        print(pp_msg)
-    if not (conn_flag & 2):
-        print(ss_msg)
-    if conn_flag ^ 3:
-        sys.exit()
-
 if arg_result.site == 'pp':
     if not (conn_flag & 1):
         print(pp_msg)
@@ -177,6 +169,8 @@ if 'all' not in input_tables:
 
 
 # tableOp object init
+from srm_db_tool.backup_tables_mgr.meta_table import \
+    meta_table_name, fixby_table_name
 from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
 from srm_db_tool.backup_tables_mgr.tableop import TableOp
 from srm_db_tool.orm.gentable import GenTable
@@ -215,7 +209,8 @@ def GetOrmClasses(a_site):
         [GenTable(unicodedata.normalize('NFKD', t).
          encode('ascii', 'ignore'),
          a_table=metadata.tables[t]) for t in metadata.tables
-         if ms_pat_1.search(t) is None if ms_pat_2.match(t) is None]
+         if ms_pat_1.search(t) is None if ms_pat_2.match(t) is None
+         if t != meta_table_name if t != fixby_table_name]
     return ormClasses
 
 from srm_db_tool.modules.tools.version_check.version_check import GetSrmVersion
@@ -225,9 +220,9 @@ pp_version = None
 ss_version = None
 
 if conn_flag & 1:
-    pp_version = GetSrmVersion(pp_conn)[1]  # version of primary site
+    pp_version = GetSrmVersion(pp_conn, 'pp')[1]  # version of primary site
 if conn_flag & 2:
-    ss_version = GetSrmVersion(ss_conn)[1]  # version of secondary site
+    ss_version = GetSrmVersion(ss_conn, 'ss')[1]  # version of secondary site
 
 
 def Backup(a_site, a_type):
@@ -282,17 +277,7 @@ def Backup(a_site, a_type):
 """
 Check sites
 """
-if arg_result.site == 'both':
-    if 'all' in input_tables:
-        Backup('pp', 'all')
-        Backup('ss', 'all')
-
-    else:
-        Backup('pp', 'tables')
-        Backup('ss', 'tables')
-
-
-elif arg_result.site == 'pp':
+if arg_result.site == 'pp':
     if 'all' in input_tables:
         Backup('pp', 'all')
 

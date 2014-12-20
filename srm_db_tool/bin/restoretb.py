@@ -1,10 +1,29 @@
+from srm_db_tool.modules.tools.backup_restore_tb.ymlparsing \
+    import SQLITE_DB_DIR, DB_CONN_PP, DB_CONN_SS
+from srm_db_tool.modules.tools.backup_restore_tb.connection \
+    import MakeConns, CheckConns
+
+import unicodedata
+
+"""
+import ms_pat_1 and ms_pat_2
+"""
+from srm_db_tool.modules.tools.backup_restore_tb.regex import \
+    ms_pat_1, ms_pat_2
+from srm_db_tool.backup_tables_mgr.meta_table import \
+    meta_table_name, fixby_table_name
+
+
+pp_conn, ss_conn = MakeConns(DB_CONN_PP, DB_CONN_SS)
+
+
 import argparse
 from srm_db_tool.modules.tools.backup_restore_tb.argparse_parent \
     import version_parser as parent_parser
 
 ap_args = {'prog': 'restoretb',
            'description': 'Restore SRM database tables',
-           'epilog': 'Contact shc for any help.',
+           'epilog': 'Contact VMWare/CPD/SRM team for help.',
            'fromfile_prefix_chars': '@',
            'add_help': True,
            'parents': [parent_parser]}
@@ -16,8 +35,9 @@ parser = argparse.ArgumentParser(**ap_args)
 Table name arguement
 """
 table_name_args = {'type': str,
-                   'help': "type in table name to backup "
-                   "or 'all' to restore the whole database"}
+                   'nargs': '+',
+                   'help': "type in table name to restore"
+                   "or 'all' to back the whole database"}
 
 parser.add_argument('table_name', **table_name_args)
 
@@ -28,7 +48,8 @@ sqlite db file name
 dbfilename_args = {'type': str,
                    'nargs': '?',
                    'default': 'default',
-                   'help': "sqlite db file name or use the latest generated name."}
+                   'help': "sqlite db file or use the latest generated file"
+                   "to restore from."}
 
 parser.add_argument('-f', '--file', **dbfilename_args)
 
@@ -38,7 +59,7 @@ which site to restore tables
 """
 site_args = {'type': str,
              'nargs': '?',
-             'default': 'both',
+             'default': 'pp',
              'choices': ['pp', 'ss'],
              'help': "pp or ss for protected site or recovery site.\n"
              "Default: %(default)s"}
@@ -49,41 +70,60 @@ parser.add_argument('-s', '--site', **site_args)
 # result = parser.parse_args(["pds_table_name"])
 # result = parser.parse_args(['pdr_vminfo', '-f', 'testME.db'])
 # result = parser.parse_args(['all', '-f', 'all_pp.db', '-s', 'pp'])
-result = parser.parse_args()
+arg_result = parser.parse_args()
+
+import sys
+conn_flag = 0
 
 
-from srm_db_tool.modules.tools.backup_restore_tb.ymlparsing\
-    import SQLITE_DB_DIR, DB_CONN_PP, DB_CONN_SS
+def ChkConn():
+    global conn_flag
+    if CheckConns(pp_conn):
+        conn_flag |= 1
+
+    if CheckConns(ss_conn):
+        conn_flag |= 2
+
+ChkConn()
+
+pp_msg = "No complete Protected Site DB " +\
+         "Connection information provided."
+ss_msg = "No complete Secondary Site DB " +\
+         "Connection information provided."
+
+the_conn = None
+
+if arg_result.site == 'pp':
+    if not (conn_flag & 1):
+        print(pp_msg)
+        sys.exit()
+    the_conn = pp_conn
+
+if arg_result.site == 'ss':
+    if not (conn_flag & 2):
+        print(ss_msg)
+        sys.exit()
+    the_conn = ss_conn
 
 
-from srm_db_tool.modules.tools.backup_restore_tb.connection\
-    import MakeConns, CheckConns
-
-pp_conn, ss_conn = MakeConns(DB_CONN_PP, DB_CONN_SS)
-
-if result.site == "both":
-    pp_msg = "Choose to restore both site, " +\
-             "but no complete Protected Site DB " +\
-             "Connection information provided."
-    ss_msg = "Choose to restore both site, " +\
-             "but no complete Recovery Site DB " +\
-             "Connection information provided."
-    CheckConns(pp_conn, ss_conn, pp_msg, ss_msg)
-
-from srm_db_tool.modules.tools.backup_restore_tb.regex import *
-
-from srm_db_tool.backup_tables_mgr.dbop import TableOp
+from srm_db_tool.backup_tables_mgr.tableop import TableOp
+from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
 from srm_db_tool.backup_tables_mgr.fm import DbFileOp
 from srm_db_tool.orm.gentable import GenTable
 
 tableOp = None
+sqlOp = None
 
-if result.file == 'default':
+if arg_result.file == 'default':
     filename = DbFileOp(SQLITE_DB_DIR).LatestFileName(False)
-    tableOp = TableOp(a_dbfile=filename, a_default_path=SQLITE_DB_DIR)
-    result.file = filename
+    sqlOp = SqliteDbOp(filename, SQLITE_DB_DIR)
+    tableOp = TableOp(sqlOp)
+    arg_result.file = filename
 else:
-    tableOp = TableOp(a_dbfile=result.file, a_default_path=SQLITE_DB_DIR)
+    sqlOp = SqliteDbOp(arg_result.file, SQLITE_DB_DIR)
+    tableOp = TableOp(sqlOp)
+
+input_tables = set(arg_result.table_name)
 
 
 def ReflectDb(a_site):
@@ -100,32 +140,21 @@ def ReflectDb(a_site):
     metadata.reflect()
     return metadata
 
-
-def DeleteAndRestore(a_table_name, a_site, a_force=False):
-    engine = pp_conn.GetEngine() if a_site == 'pp' else ss_conn.GetEngine()
-    session = pp_conn.GetSession() if a_site == 'pp' else ss_conn.GetSession()
-    site_name = "Protected" if a_site == 'pp' else "Recovery"
-
-    table_c = GenTable(a_table_name, engine)
-
-    restore_result = tableOp.Restore(table_c, a_site)
+### TODO delete all data inside that table then restore!!!
+def Restore(a_table_name):
+    restore_result = tableOp.Restore(a_table_name)
 
     if restore_result is None:
         print("Recovery db file: "
-              + result.file + " has no backup table: "
-              + a_table_name + " for " + site_name + " site")
-        if a_force is True:
-            engine.execute(table_c.__table__.delete())
+              + arg_result.file + " has no backup table: "
+              + a_table_name)
 
     elif restore_result.__len__() == 0:
         print("Recovery db file: "
-              + result.file + " has no data for " + site_name + " site table: "
+              + arg_result.file + " has no data in table: "
               + a_table_name)
-        if a_force is True:
-            engine.execute(table_c.__table__.delete())
 
-    else:
-        engine.execute(table_c.__table__.delete())
+    session = the_conn.GetSession()
 
     if restore_result is not None:
         for orm_o in restore_result:
@@ -139,62 +168,23 @@ def DeleteAndRestore(a_table_name, a_site, a_force=False):
 """
 Check sites
 """
-import unicodedata
-
-if result.site == 'both':
-    if result.table_name == 'all':
-
-        session_pp = pp_conn.GetSession()
-
-        l_tables = ReflectDb('pp').tables
-        for tname in l_tables:
-            if ms_pat_1.search(tname) is not None:
-                continue
-            if ms_pat_2.match(tname) is not None:
-                continue
-            str_tname = unicodedata.normalize('NFKD', tname).\
-                encode('ascii', 'ignore')
-            DeleteAndRestore(str_tname, 'pp', True)
-
-        l_tables = ReflectDb('ss').tables
-        for tname in l_tables:
-            if ms_pat_1.search(tname) is not None:
-                continue
-            if ms_pat_2.match(tname) is not None:
-                continue
-            str_tname = unicodedata.normalize('NFKD', tname).\
-                encode('ascii', 'ignore')
-            DeleteAndRestore(str_tname, 'ss', True)
-
-    else:
-        DeleteAndRestore(result.table_name, 'pp')
-        DeleteAndRestore(result.table_name, 'ss')
-
-elif result.site == 'pp':
-    if result.table_name == 'all':
-        l_tables = ReflectDb('pp').tables
-        for tname in l_tables:
-            if ms_pat_1.search(tname) is not None:
-                continue
-            if ms_pat_2.match(tname) is not None:
-                continue
-            str_tname = unicodedata.normalize('NFKD', tname).\
-                encode('ascii', 'ignore')
-            DeleteAndRestore(str_tname, 'pp', True)
-    else:
-        DeleteAndRestore(result.table_name, 'pp')
 
 
-elif result.site == 'ss':
-    if result.table_name == 'all':
-        l_tables = ReflectDb('ss').tables
-        for tname in l_tables:
-            if ms_pat_1.search(tname) is not None:
-                continue
-            if ms_pat_2.match(tname) is not None:
-                continue
-            str_tname = unicodedata.normalize('NFKD', tname).\
-                encode('ascii', 'ignore')
-            DeleteAndRestore(str_tname, 'ss', True)
-    else:
-        DeleteAndRestore(result.table_name, 'ss')
+if 'all' in input_tables:
+    l_tables = ReflectDb(arg_result.site).tables
+
+    for tname in l_tables:
+        if ms_pat_1.search(tname) is not None:
+            continue
+        if ms_pat_2.match(tname) is not None:
+            continue
+
+        str_tname = unicodedata.normalize('NFKD', tname).\
+            encode('ascii', 'ignore')
+
+        if str_tname == meta_table_name or str_tname == fixby_table_name:
+            continue
+
+        Restore(str_tname)
+else:
+    DeleteAndRestore(result.table_name, 'pp')

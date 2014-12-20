@@ -54,4 +54,23 @@ restoretb
 3.
 ================
 1.
-tableop add check lock status
+remove backuptb for both site. impossible for now
+
+2.
+deletetb
+
+3.
+restoretb
+
+4.
+lsrp
+
+5.
+rmrp
+
+6.
+restorerp
+
+----------------
+7.
+protection group

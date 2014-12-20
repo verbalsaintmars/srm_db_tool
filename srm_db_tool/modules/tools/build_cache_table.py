@@ -5,6 +5,11 @@ import unicodedata
 
 
 def BuildCache(a_conn, a_file):
+    """
+    There are tables that we don't want to cache from.
+    e.g MS SQL has system tables that we don't do the backup/delete/update
+    from.
+    """
     base = declarative_base()
     base.metadata.bind = a_conn.GetEngine()
     base.metadata.reflect()
@@ -15,7 +20,7 @@ def BuildCache(a_conn, a_file):
              for t in base.metadata.tables
              if ms_pat_1.search(t) is None if ms_pat_2.match(t) is None])
 
-    print("Building table cache file...")
+    print("\n\nBuilding table cache file...\n\n")
 
     with open(a_file+'.py', 'w') as f:
         f.write('tables = {\n')

@@ -3,6 +3,9 @@ from srm_db_tool.modules.tools.backup_restore_tb.ymlparsing \
 from srm_db_tool.modules.tools.backup_restore_tb.connection \
     import MakeConns, CheckConns
 
+from srm_db_tool.modules.tools.backup_restore_tb.verify \
+    import GetVerify
+
 from srm_db_tool.modules.tools.check_create_table_cache import \
     CheckCreateCacheTable
 
@@ -120,6 +123,10 @@ if 'all' not in input_tables:
               " Use --ft to force refresh cache table.")
         sys.exit()
 
+"""
+Allow user to confirm the delete
+"""
+GetVerify()
 
 from srm_db_tool.orm.gentable import GenTable
 

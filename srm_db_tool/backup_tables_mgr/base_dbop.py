@@ -207,7 +207,10 @@ class BaseDbOp(object):
             """
             table_c = this.table_cache[a_table_name]
         except KeyError:
-            table = this._reflectTable(a_table_name)
+            try:
+                table = this._reflectTable(a_table_name)
+            except:
+                return None
             table_c = GenTable(a_table_name, a_table=table, a_base=this.base)
             this.table_cache[a_table_name] = table_c
 

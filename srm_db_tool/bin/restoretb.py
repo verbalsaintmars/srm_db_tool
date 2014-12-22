@@ -3,6 +3,9 @@ from srm_db_tool.modules.tools.backup_restore_tb.ymlparsing \
 from srm_db_tool.modules.tools.backup_restore_tb.connection \
     import MakeConns, CheckConns
 
+from srm_db_tool.modules.tools.backup_restore_tb.verify \
+    import GetVerify
+
 import unicodedata
 
 """
@@ -105,6 +108,10 @@ if arg_result.site == 'ss':
         sys.exit()
     the_conn = ss_conn
 
+"""
+Get confirm from user
+"""
+GetVerify()
 
 from srm_db_tool.backup_tables_mgr.tableop import TableOp
 from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
@@ -140,51 +147,68 @@ def ReflectDb(a_site):
     metadata.reflect()
     return metadata
 
-### TODO delete all data inside that table then restore!!!
+
 def Restore(a_table_name):
     restore_result = tableOp.Restore(a_table_name)
+    row_deleted = 0
+    row_inserted = 0
 
     if restore_result is None:
+        """
         print("Recovery db file: "
-              + arg_result.file + " has no backup table: "
+              + arg_result.file + " has no data in backup table: "
               + a_table_name)
+        """
+    else:
+        engine = the_conn.GetEngine()
+        session = the_conn.GetSession()
 
-    elif restore_result.__len__() == 0:
-        print("Recovery db file: "
-              + arg_result.file + " has no data in table: "
-              + a_table_name)
+        table_c = GenTable(a_table_name, engine)
 
-    session = the_conn.GetSession()
+        row_deleted = engine.execute(table_c.__table__.delete()).rowcount
+        row_inserted = restore_result.__len__()
 
-    if restore_result is not None:
         for orm_o in restore_result:
             local_orm_o = table_c()
+
             for c in table_c.__table__.c:
                 setattr(local_orm_o, c.name, getattr(orm_o, c.name))
+
             session.add(local_orm_o)
-            session.commit()
+
+        session.commit()
+
+    return (row_deleted, row_inserted)
 
 
 """
 Check sites
 """
-
+template_str = "{:37} {:>12} {:<10}"
+print(template_str.format("Table", "Deleted", "Inserted"))
 
 if 'all' in input_tables:
     l_tables = ReflectDb(arg_result.site).tables
 
-    for tname in l_tables:
-        if ms_pat_1.search(tname) is not None:
+    for tn in l_tables:
+        if ms_pat_1.search(tn) is not None:
             continue
-        if ms_pat_2.match(tname) is not None:
+        if ms_pat_2.match(tn) is not None:
             continue
 
-        str_tname = unicodedata.normalize('NFKD', tname).\
+        str_tname = unicodedata.normalize('NFKD', tn).\
             encode('ascii', 'ignore')
 
         if str_tname == meta_table_name or str_tname == fixby_table_name:
             continue
 
-        Restore(str_tname)
+        row_deleted, row_inserted = Restore(str_tname)
+
+        if row_deleted != 0 or row_inserted != 0:
+            print(template_str.format(tn, row_deleted, row_inserted))
+
 else:
-    DeleteAndRestore(result.table_name, 'pp')
+    for tn in input_tables:
+        row_deleted, row_inserted = Restore(tn)
+        if row_deleted != 0 or row_inserted != 0:
+            print(template_str.format(tn, row_deleted, row_inserted))

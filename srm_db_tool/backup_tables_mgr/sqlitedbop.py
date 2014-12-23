@@ -18,7 +18,7 @@ class SqliteDbOp(BaseDbOp):
     """
     Manipulate sqlite database file
     """
-    def __init__(this, a_dbfile=None, a_path=None):
+    def __init__(this, a_dbfile=None, a_path=None, a_create_meta_table=True):
         """
         a_path : sqlite db file path
         """
@@ -43,7 +43,7 @@ class SqliteDbOp(BaseDbOp):
         this.metadata.bind = this.conn.GetEngine()
         this.session = this.conn.GetSession()
 
-        this.CheckAndCreateTable()
+        this.CheckAndCreateTable(a_create_meta_table)
 
     def _convertType(this, a_type):
         """

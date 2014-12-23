@@ -185,7 +185,7 @@ else:
     sqlop = SqliteDbOp(arg_result.file, SQLITE_DB_DIR)
     tableOp = TableOp(sqlop)
 
-if tableOp.GetMetaData()['lock']:
+if tableOp.GetMetaData()['Lock state']:
     if not arg_result.fb:
         print("database : {} is locked. If insist, use --fb to override.".
               format(arg_result.file))

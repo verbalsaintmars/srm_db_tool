@@ -15,20 +15,20 @@ class MssqlDbOp(BaseDbOp):
     """
     Manipulate sqlite database file
     """
-    def __init__(this, a_param):
-        """
-        a_path : sqlite db file path
-        """
+    def __init__(this, a_param=None, a_conn=None, a_create_meta_table=True):
         super(MssqlDbOp, this).__init__()
 
-        this.params = a_param
+        if a_conn is not None:
+            this.conn = a_conn
+        else:
+            this.params = a_param
 
-        this.conn = MakeConn(this.params)
+            this.conn = MakeConn(this.params)
 
         this.metadata.bind = this.conn.GetEngine()
         this.session = this.conn.GetSession()
 
-        this.CheckAndCreateTable()
+        this.CheckAndCreateTable(a_create_meta_table)
 
     def _convertType(this, a_type):
         """

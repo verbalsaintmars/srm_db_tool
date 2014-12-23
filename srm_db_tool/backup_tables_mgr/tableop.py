@@ -89,14 +89,14 @@ class TableOp(object):
 
     def GetMetaData(this):
         return \
-            {"version": this.dbOp.VERSION,
-             "site": this.dbOp.SITE,
-             "lock": this.dbOp.LOCK,
-             "pairDB": this.dbOp.PAIRDB,
-             "dumptype": this.dbOp.DUMPTYPE,
-             "prnum": this.dbOp.PRNUM,
-             "kburl": this.dbOp.KBURL,
-             "desc": this.dbOp.DESC}
+            {"SRM Version": this.dbOp.VERSION,
+             "Site": this.dbOp.SITE,
+             "Lock state": this.dbOp.LOCK,
+             "Pair Db File": this.dbOp.PAIRDB,
+             "Dump type": this.dbOp.DUMPTYPE,
+             "PR Number": this.dbOp.PRNUM,
+             "KB URL": this.dbOp.KBURL,
+             "Description": this.dbOp.DESC}
 
     def SetFixByModule(this, a_module):
         this.dbOp.MODULE = a_module

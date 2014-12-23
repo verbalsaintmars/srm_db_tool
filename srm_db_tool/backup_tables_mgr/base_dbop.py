@@ -53,7 +53,7 @@ class BaseDbOp(object):
         if this.db_metadata is None:
             try:
                 this.db_metadata = this.session.query(this.meta_table_c).one()
-            except (MultipleResultsFound, NoResultFound) as exp:
+            except (MultipleResultsFound, NoResultFound, Exception) as exp:
                 if exp.__class__ == MultipleResultsFound:
                     print(SaException(
                         'SA',
@@ -257,7 +257,7 @@ class BaseDbOp(object):
 
         return this.session.query(table_c).delete()
 
-    def CheckAndCreateTable(this):
+    def CheckAndCreateTable(this, a_create_meta_table=True):
         """
         Check if this sqlite db contains meta data tables.
         i.e meta table and fixby table
@@ -279,7 +279,7 @@ class BaseDbOp(object):
 
         create_table_flag = 0
 
-        if meta_table_result.__len__() == 0:
+        if meta_table_result.__len__() == 0 and a_create_meta_table is True:
             """
             this sqlite db file does not contain meta table
             """
@@ -287,16 +287,16 @@ class BaseDbOp(object):
             this.meta_table_c.__table__.indexes = set()
             create_table_flag |= 1
 
-        else:
+        elif meta_table_result.__len__() != 0:
             this.meta_table_c = this._gen_meta_table_c(
                 "meta",
                 meta_table_result[0])
 
-        if fixby_table_result.__len__() == 0:
+        if fixby_table_result.__len__() == 0 and a_create_meta_table is True:
             this.fixby_table_c = this._gen_meta_table_c("fixby")
             this.fixby_table_c.__table__.indexes = set()
             create_table_flag |= 2
-        else:
+        elif fixby_table_result.__len__() != 0:
             this.fixby_table_c = this._gen_meta_table_c(
                 "fixby",
                 fixby_table_result[0])
@@ -322,7 +322,7 @@ class BaseDbOp(object):
 
     def GetSrmVersion(this):
         this._fetch_metadata()
-        return this.db_metadata.version
+        return this.db_metadata.version if this.db_metadata else None
 
     def SetDumpType(this, a_dump_type, a_force=False):
         if not a_dump_type:
@@ -340,7 +340,7 @@ class BaseDbOp(object):
 
     def GetDumpType(this):
         this._fetch_metadata()
-        return this.db_metadata.dumpType
+        return this.db_metadata.dumpType if this.db_metadata else None
 
     def SetSite(this, a_site, a_force=False):
         if not a_site:
@@ -358,7 +358,7 @@ class BaseDbOp(object):
 
     def GetSite(this):
         this._fetch_metadata()
-        return this.db_metadata.site
+        return this.db_metadata.site if this.db_metadata else None
 
     def SetPairDBFile(this, a_dbfile, a_force=False):
         if not a_dbfile:
@@ -376,7 +376,7 @@ class BaseDbOp(object):
 
     def GetPairDBFile(this):
         this._fetch_metadata()
-        return this.db_metadata.pairDbFile
+        return this.db_metadata.pairDbFile if this.db_metadata else None
 
     def SetLock(this, a_lock=1):
         if a_lock is None:
@@ -389,7 +389,7 @@ class BaseDbOp(object):
 
     def GetLock(this):
         this._fetch_metadata()
-        return this.db_metadata.lock
+        return this.db_metadata.lock if this.db_metadata else None
 
     def SetPRNum(this, a_pr, a_force=False):
         if not a_pr:
@@ -407,7 +407,7 @@ class BaseDbOp(object):
 
     def GetPRNum(this):
         this._fetch_metadata()
-        return this.db_metadata.prNumber
+        return this.db_metadata.prNumber if this.db_metadata else None
 
     def SetKbUrl(this, a_kb, a_force=False):
         if not a_kb:
@@ -425,7 +425,7 @@ class BaseDbOp(object):
 
     def GetKbUrl(this):
         this._fetch_metadata()
-        return this.db_metadata.kbUrl
+        return this.db_metadata.kbUrl if this.db_metadata else None
 
     def SetDescript(this, a_desc, a_force=False):
         if not a_desc:
@@ -443,7 +443,7 @@ class BaseDbOp(object):
 
     def GetDescript(this):
         this._fetch_metadata()
-        return this.db_metadata.desc
+        return this.db_metadata.desc if this.db_metadata else None
 
     def SetFixByModule(this, a_module):
         """
@@ -467,6 +467,9 @@ class BaseDbOp(object):
             this.session.commit()
 
     def GetFixByModule(this):
+        if this.fixby_table_c is None:
+            return None
+
         result = this.session.query(this.fixby_table_c).\
             order_by(this.fixby_table_c.id)
 
@@ -474,8 +477,8 @@ class BaseDbOp(object):
 
         for r in result:
             mo = Module()
-            mo.NAME = result.module
-            mo.DESC = result.desc
+            mo.NAME = r.module
+            mo.DESC = r.desc
             module_result.append(mo)
 
         return module_result

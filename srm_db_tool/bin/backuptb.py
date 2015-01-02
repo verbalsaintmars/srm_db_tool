@@ -48,7 +48,7 @@ parser = argparse.ArgumentParser(**ap_args)
 Table name arguement
 """
 table_name_args = {'type': str,
-                   'nargs': '+',
+                   'nargs': '*',
                    'help': "type in table name to backup "
                    "or 'all' to back the whole database"}
 
@@ -63,6 +63,24 @@ dbfilename_args = {'type': str,
                    'help': "sqlite db file name or use default generated name"}
 
 parser.add_argument('-f', '--file', **dbfilename_args)
+
+
+"""
+which workflow tables to dump.
+"""
+wf_args = {'type': str,
+           'nargs': '?',
+           'help': "Talbes of workflow to backup.\n"}
+
+parser.add_argument('-wf', '--wf', **wf_args)
+
+
+"""
+list workflow provided.
+"""
+list_wf_args = {'action': 'store_true',
+                'help': "List workflows supported.\n"}
+parser.add_argument('-l', '--listwf', **list_wf_args)
 
 
 """
@@ -112,7 +130,7 @@ Force refresh cache
 ft_args = {'action': 'store_true',
            'help': "Force recreate cache tables."}
 
-parser.add_argument('--ft', **ft_args)
+parser.add_argument('-ft', '--ft', **ft_args)
 
 """
 Force backup into a locked dump.
@@ -121,11 +139,79 @@ fb_args = {'action': 'store_true',
            'help': "Force backup into a locked database, might cause crash if"
            "primary key is violated."}
 
-parser.add_argument('--fb', **fb_args)
+parser.add_argument('-fb', '--fb', **fb_args)
 
 arg_result = parser.parse_args()
+if arg_result.table_name.__len__() == 0 and \
+    arg_result.listwf is False and \
+    arg_result.ft is False and \
+        arg_result.wf is None:
+    print("Please use -h for help.")
+    import sys
+    sys.exit()
 
-import sys
+"""
+Workflow logic
+"""
+input_tables = None
+dtype = None
+
+
+def CheckCacheTable():
+    global input_tables
+    if 'all' not in input_tables:
+        table_in_cache_set = input_tables & table_cache
+
+        if len(table_in_cache_set) != len(input_tables):
+            import sys
+            r = input_tables - table_in_cache_set
+            print(str(r) + " table is/are not in the cache table.")
+            sys.exit()
+
+
+def ListSupportWorkFlow():
+    if arg_result.listwf is not False:
+        from srm_db_tool.backup_tables_mgr.tables.workflow import WorkFlow
+        wf_obj = WorkFlow()
+        wf_list = wf_obj.GetWfList()
+
+        wf_str_tmp = "{:^20} {:^10}"
+        import sys
+        print(wf_str_tmp.format("Workflow modules", "Description"))
+        for wf in wf_list:
+            print(wf_str_tmp.format(wf[0], wf[1]))
+        sys.exit()
+
+ListSupportWorkFlow()
+
+
+def GetWfTables():
+    global input_tables
+    global dtype
+
+    if arg_result.wf is not None:
+        from srm_db_tool.backup_tables_mgr.tables.workflow import WorkFlow
+        wf_obj = WorkFlow()
+        wf_list = wf_obj.GetWfList()
+        table_list = None
+
+        for wf in wf_list:
+            if arg_result.wf == wf[0]:
+                table_list = wf[2]
+                dtype = wf[0]
+
+        if table_list is None:
+            print("Please specify the proper workflow module."
+                  "Use -l to list supported modules.")
+            import sys
+            sys.exit()
+
+        input_tables = set(table_list)
+        CheckCacheTable()
+
+GetWfTables()
+
+
 conn_flag = 0
 
 
@@ -146,26 +232,27 @@ ss_msg = "No complete Secondary Site DB " +\
 
 if arg_result.site == 'pp':
     if not (conn_flag & 1):
+        import sys
         print(pp_msg)
         sys.exit()
 
 if arg_result.site == 'ss':
     if not (conn_flag & 2):
+        import sys
         print(ss_msg)
         sys.exit()
 
 if arg_result.ft:
     table_cache = CheckCreateCacheTable(the_conn, True)
 
-input_tables = set(arg_result.table_name)
-
-if 'all' not in input_tables:
-    table_in_cache_set = input_tables & table_cache
-
-    if len(table_in_cache_set) != len(input_tables):
-        r = input_tables - table_in_cache_set
-        print(str(r) + " table is/are not in the cache table.")
+if input_tables is None:
+    if arg_result.table_name is None:
+        import sys
+        print("Please either type in -wf or tables you want to backup from.")
         sys.exit()
+
+    input_tables = set(arg_result.table_name)
+    CheckCacheTable()
 
 
 # tableOp object init
@@ -187,6 +274,7 @@ else:
 
 if tableOp.GetMetaData()['Lock state']:
     if not arg_result.fb:
+        import sys
         print("database : {} is locked. If insist, use --fb to override.".
               format(arg_result.file))
         sys.exit()
@@ -263,11 +351,15 @@ def Backup(a_site, a_type):
                     print("Secondary Site Table : "
                           + tn + " has no data.")
             else:
+                dumptype = DumpType.CUSTOMIZED
+                if a_type is not None:
+                    dumptype.TYPE = a_type
+
                 tableOp.Backup(
                     qresult,
                     pp_version if a_site == 'pp' else ss_version,
                     "primary" if a_site == 'pp' else "secondary",
-                    DumpType.CUSTOMIZED,
+                    dumptype,
                     a_prNum=arg_result.pr,
                     a_kburl=arg_result.kb,
                     a_desc=arg_result.desc,
@@ -282,11 +374,11 @@ if arg_result.site == 'pp':
         Backup('pp', 'all')
 
     else:
-        Backup('pp', 'tables')
+        Backup('pp', dtype)
 
 elif arg_result.site == 'ss':
     if 'all' in input_tables:
         Backup('ss', 'all')
 
     else:
-        Backup('ss', 'tables')
+        Backup('ss', dtype)

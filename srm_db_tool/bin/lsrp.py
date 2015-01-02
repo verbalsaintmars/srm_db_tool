@@ -4,7 +4,7 @@ from srm_db_tool.modules.tools.recovery_plan.argparse_parent \
 
 ap_args = {'prog': 'lsrp',
            'description': 'List SRM recovery plans',
-           'epilog': 'Contact shc for any help.',
+           'epilog': 'Contact VMWare/CPD/SRM team for help.',
            'fromfile_prefix_chars': '@',
            'add_help': True,
            'parents': [parent_parser]}
@@ -38,7 +38,7 @@ parser.add_argument('-s', '--site', **site_args)
 # result = parser.parse_args(["pds_table_name"])
 # result = parser.parse_args(['pdr_vminfo', '-f', 'testME.db'])
 # result = parser.parse_args(['all', '-f', 'all_pp.db', '-s', 'pp'])
-result = parser.parse_args()
+arg_result = parser.parse_args()
 
 from srm_db_tool.modules.tools.recovery_plan.ymlparsing\
     import DB_CONN_PP, DB_CONN_SS
@@ -49,36 +49,63 @@ from srm_db_tool.modules.tools.recovery_plan.connection\
 
 pp_conn, ss_conn = MakeConns(DB_CONN_PP, DB_CONN_SS)
 
-if result.site == "both":
-    pp_msg = "Choose to show recovery plan info on both site, " +\
-             "but no complete Protected Site DB " +\
-             "Connection information provided."
-    ss_msg = "Choose to show recovery plan info on both site, " +\
-             "but no complete Recovery Site DB " +\
-             "Connection information provided."
-    CheckConns(pp_conn, ss_conn, pp_msg, ss_msg)
+conn_flag = 0
 
-# -----------------------------------------------------------------
+
+def ChkConn():
+    global conn_flag
+    if CheckConns(pp_conn):
+        conn_flag |= 1
+
+    if CheckConns(ss_conn):
+        conn_flag |= 2
+
+ChkConn()
+
+pp_msg = "No complete Protected Site DB " +\
+         "Connection information provided."
+ss_msg = "No complete Secondary Site DB " +\
+         "Connection information provided."
+
+import sys
+
+if arg_result.site == "both":
+    if not (conn_flag & 1):
+        print(pp_msg)
+        sys.exit()
+
+    if not (conn_flag & 2):
+        print(ss_msg)
+        sys.exit()
+elif arg_result.site == "pp":
+    if not (conn_flag & 1):
+        print(pp_msg)
+        sys.exit()
+elif arg_result.site == "ss":
+    if not (conn_flag & 2):
+        print(pp_msg)
+        sys.exit()
+
 from srm_db_tool.modules.tools.recovery_plan.list_recovery_plan\
     import ListRecoveryPlan
 
 
 lsrp = ListRecoveryPlan(pp_conn, ss_conn)
 
-if result.site == 'both':
-    if result.rp_name == 'all':
+if arg_result.site == 'both':
+    if arg_result.rp_name == 'all':
         lsrp()
     else:
-        lsrp(result.rp_name)
+        lsrp(arg_result.rp_name)
 
-if result.site == 'pp':
-    if result.rp_name == 'all':
+if arg_result.site == 'pp':
+    if arg_result.rp_name == 'all':
         lsrp.site(a_site='pp')
     else:
-        lsrp.site(result.rp_name, a_site='pp')
+        lsrp.site(arg_result.rp_name, a_site='pp')
 
-if result.site == 'ss':
-    if result.rp_name == 'all':
+if arg_result.site == 'ss':
+    if arg_result.rp_name == 'all':
         lsrp.site(a_site='ss')
     else:
-        lsrp.site(result.rp_name, a_site='ss')
+        lsrp.site(arg_result.rp_name, a_site='ss')

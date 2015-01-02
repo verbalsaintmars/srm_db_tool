@@ -27,10 +27,10 @@ srmdb_protect:
     # base on different dbtype, db_tool has it's default port set if don't provide one
     #port:
     # if dsn is set, use dsn, otherwise , use host/port to connect
-    dsn: fun_pp_01
+    #dsn: fun_pp_01
     #db: HQ_TEST
-    dbtype: mssql
-    #dbtype: sqlite
+    #dbtype: mssql
+    dbtype: sqlite
     #lang:
     # for sqlite
     path: c:\pp.db

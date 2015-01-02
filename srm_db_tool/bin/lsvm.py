@@ -1,10 +1,9 @@
-
 import argparse
 from srm_db_tool.modules.tools.recovery_plan.argparse_parent \
     import version_parser as parent_parser
 
-ap_args = {'prog': 'restorerp',
-           'description': 'Restore SRM recovery plans',
+ap_args = {'prog': 'lsvm',
+           'description': 'List SRM Protection Group\'s Protected VMs',
            'epilog': 'Contact VMWare/CPD/SRM team for help.',
            'fromfile_prefix_chars': '@',
            'add_help': True,
@@ -16,21 +15,11 @@ parser = argparse.ArgumentParser(**ap_args)
 """
 Table name arguement
 """
-rpname_args = {'type': str,
-               'help': "type in the recovery plan name to be restored."}
+pgname_args = {'type': str,
+               'help': "type in recovery plan name to show details "
+               "or 'all' to show all the recovery plans"}
 
-parser.add_argument('rp_name', **rpname_args)
-
-
-"""
-sqlite db file name
-"""
-dbfilename_args = {'type': str,
-                   'nargs': '?',
-                   'default': 'default',
-                   'help': "sqlite db file name or use default generated name"}
-
-parser.add_argument('-f', '--file', **dbfilename_args)
+parser.add_argument('pg_name', **pgname_args)
 
 
 """
@@ -52,7 +41,7 @@ parser.add_argument('-s', '--site', **site_args)
 arg_result = parser.parse_args()
 
 from srm_db_tool.modules.tools.recovery_plan.ymlparsing\
-    import SQLITE_DB_DIR, DB_CONN_PP, DB_CONN_SS
+    import DB_CONN_PP, DB_CONN_SS
 
 
 from srm_db_tool.modules.tools.recovery_plan.connection\
@@ -78,41 +67,28 @@ pp_msg = "No complete Protected Site DB " +\
 ss_msg = "No complete Secondary Site DB " +\
          "Connection information provided."
 
-the_conn = None
-
 import sys
+
+the_conn = None
 
 if arg_result.site == "pp":
     if not (conn_flag & 1):
         print(pp_msg)
         sys.exit()
     the_conn = pp_conn
-
 elif arg_result.site == "ss":
     if not (conn_flag & 2):
         print(pp_msg)
         sys.exit()
     the_conn = ss_conn
 
-from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
-from srm_db_tool.backup_tables_mgr.tableop import TableOp
-
-sqlop = None
-tableOp = None
-
-if arg_result.file == 'default':
-    sqlop = SqliteDbOp(a_path=SQLITE_DB_DIR)
-    tableOp = TableOp(sqlop)
-else:
-    sqlop = SqliteDbOp(arg_result.file, SQLITE_DB_DIR)
-    tableOp = TableOp(sqlop)
+from srm_db_tool.modules.tools.protection_group.list_vm\
+    import ListVm
 
 
-# -----------------------------------------------------------------
-from srm_db_tool.modules.tools.recovery_plan.restore_recovery_plan\
-    import RestoreRecoveryPlan
+lsvm = ListVm(the_conn)
 
+vm_result = lsvm.GetProtectedVms(arg_result.pg_name)
 
-restorerp = RestoreRecoveryPlan(the_conn, tableOp)
-
-restorerp(arg_result.rp_name)
+if vm_result is not None:
+    lsvm.PrintResult(vm_result)

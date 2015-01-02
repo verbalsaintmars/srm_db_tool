@@ -30,6 +30,9 @@ class TableOp(object):
         """
         this.dbOp = a_dbop
 
+    def GetDbOp(this):
+        return this.dbOp
+
     def Backup(
         this,
         a_value_list,
@@ -136,3 +139,5 @@ class TableOp(object):
             Make use for Context Managers
         """
         this.dbOp.Dispose()
+
+    DBOP = property(GetDbOp)

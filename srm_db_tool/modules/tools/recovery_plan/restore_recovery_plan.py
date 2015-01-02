@@ -1,5 +1,7 @@
 from srm_db_tool.formatter.layout import PrintResult
 from srm_db_tool.orm.gentable import GenTable
+from srm_db_tool.backup_tables_mgr.module import Module
+from srm_db_tool.backup_tables_mgr.generaldbop import GeneralDbOp
 
 from srm_db_tool.exception.predefined import MODULE_EXCEPT_FORMAT
 
@@ -8,27 +10,25 @@ class RestoreRecoveryPlan(object):
 
     def __init__(
         this,
-        a_pp_conn,
-        a_ss_conn,
+        a_conn,
         a_tableop,
             a_formatter=PrintResult()):
 
-        this.pp_conn = a_pp_conn
-        this.ss_conn = a_ss_conn
+        this.the_conn = a_conn
         this.formatter = a_formatter
         this.tableop = a_tableop
 
         this.pdr_planproperties_c =\
-            GenTable("pdr_planproperties", this.pp_conn.GetEngine())
+            GenTable("pdr_planproperties", this.the_conn.GetEngine())
 
         this.pdr_plancontents_c =\
-            GenTable("pdr_plancontents", this.pp_conn.GetEngine())
+            GenTable("pdr_plancontents", this.the_conn.GetEngine())
 
         this.pdr_protectiongroupmap_c =\
-            GenTable("pdr_protectiongroupmap", this.pp_conn.GetEngine())
+            GenTable("pdr_protectiongroupmap", this.the_conn.GetEngine())
 
         this.g_do_array_c =\
-            GenTable("g_do_array", this.pp_conn.GetEngine())
+            GenTable("g_do_array", this.the_conn.GetEngine())
 
     def PrintResult(this, a_result):
         this.formatter.PrintRecoveryPlan(a_result)
@@ -42,17 +42,15 @@ class RestoreRecoveryPlan(object):
         try:
             for r in result:
                 this.PrintResult(r)
-        except Exception as e:
+        except Exception:
             return
 
-    def Recover(this, a_name, a_site):
-        # TODO
-        # 2 ways commit
+    def Recover(this, a_name):
 
-        pp_result = this.tableop.Restore(this.pdr_planproperties_c, a_site)
-        pc_result = this.tableop.Restore(this.pdr_plancontents_c, a_site)
-        pg_result = this.tableop.Restore(this.pdr_protectiongroupmap_c, a_site)
-        g_do_array_result = this.tableop.Restore(this.g_do_array_c, a_site)
+        pp_result = this.tableop.Restore("pdr_planproperties")
+        pc_result = this.tableop.Restore("pdr_plancontents")
+        pg_result = this.tableop.Restore("pdr_protectiongroupmap")
+        g_do_array_result = this.tableop.Restore("g_do_array")
 
         pdr_pp = [r for r in pp_result if r.name == a_name][0]
 
@@ -68,12 +66,7 @@ class RestoreRecoveryPlan(object):
             pdr_pg_list.append(
                 [r for r in pg_result if r.db_id == go_id.db_id][0])
 
-        session = None
-
-        if a_site == 'pp':
-            session = this.pp_conn.GetSession()
-        if a_site == 'ss':
-            session = this.ss_conn.GetSession()
+        session = this.the_conn.GetSession()
 
         pp_obj = this.pdr_planproperties_c()
         pc_obj = this.pdr_plancontents_c()
@@ -114,9 +107,29 @@ class RestoreRecoveryPlan(object):
     def RemoveBackup(this, a_datum):
         this.tableop.Remove(a_datum)
 
-    def __call__(this, a_name=None, a_site="pp"):
+    def __call__(this, a_name=None):
         if a_name is None:
             print("Please enter the Recover Plan we want to restore...")
             return
 
-        this.Recover(a_name, a_site)
+        this.Recover(a_name)
+
+        """
+        Insert into srm_meta_table_fixby table if possible
+        """
+        gdbop = GeneralDbOp(this.the_conn)
+        if gdbop.LOCK:
+            gdbop.LOCK = 0
+
+        if gdbop.MODULE is not None:
+            """
+            Create a Module type instance to describe and insert into
+                srm_meta_table_fixby table
+            """
+            module = Module()
+            module.NAME = "restorerp"
+            module.DESC = "restore recovery plan"
+            gdbop.MODULE = module
+
+        if gdbop.LOCK == 0:
+            gdbop.LOCK = 1

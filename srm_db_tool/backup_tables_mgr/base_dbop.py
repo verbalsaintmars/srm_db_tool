@@ -215,6 +215,7 @@ class BaseDbOp(object):
             this.table_cache[a_table_name] = table_c
 
         result = None
+
         try:
             result = this.session.query(table_c).all()
         except Exception as e:

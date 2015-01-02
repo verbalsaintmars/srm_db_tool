@@ -4,7 +4,7 @@ from srm_db_tool.modules.tools.recovery_plan.argparse_parent \
 
 ap_args = {'prog': 'rmrp',
            'description': 'Remove SRM recovery plans',
-           'epilog': 'Contact shc for any help.',
+           'epilog': 'Contact VMWare/CPD/SRM team for help.',
            'fromfile_prefix_chars': '@',
            'add_help': True,
            'parents': [parent_parser]}
@@ -37,7 +37,7 @@ which site to restore tables
 """
 site_args = {'type': str,
              'nargs': '?',
-             'default': 'both',
+             'default': 'pp',
              'choices': ['pp', 'ss'],
              'help': "pp or ss for protected site or recovery site.\n"
              "Default: %(default)s"}
@@ -45,10 +45,39 @@ site_args = {'type': str,
 parser.add_argument('-s', '--site', **site_args)
 
 
+"""
+Description of the database dump
+"""
+desc_args = {'type': str,
+             'nargs': '?',
+             'help': "Description of this database dump."}
+
+parser.add_argument('-d', '--desc', **desc_args)
+
+
+"""
+PR Number
+"""
+pr_args = {'type': int,
+           'nargs': '?',
+           'help': "PR Number."}
+
+parser.add_argument('-p', '--pr', **pr_args)
+
+
+"""
+KB URL
+"""
+kb_args = {'type': str,
+           'nargs': '?',
+           'help': "KB URL"}
+
+parser.add_argument('-k', '--kb', **kb_args)
+
 # result = parser.parse_args(["pds_table_name"])
 # result = parser.parse_args(['pdr_vminfo', '-f', 'testME.db'])
 # result = parser.parse_args(['all', '-f', 'all_pp.db', '-s', 'pp'])
-result = parser.parse_args()
+arg_result = parser.parse_args()
 
 from srm_db_tool.modules.tools.recovery_plan.ymlparsing\
     import SQLITE_DB_DIR, DB_CONN_PP, DB_CONN_SS
@@ -59,24 +88,50 @@ from srm_db_tool.modules.tools.recovery_plan.connection\
 
 pp_conn, ss_conn = MakeConns(DB_CONN_PP, DB_CONN_SS)
 
-if result.site == "both":
-    pp_msg = "Choose to remove recovery plan on both site, " +\
-             "but no complete Protected Site DB " +\
-             "Connection information provided."
-    ss_msg = "Choose to remove recovery plan on both site, " +\
-             "but no complete Recovery Site DB " +\
-             "Connection information provided."
-    CheckConns(pp_conn, ss_conn, pp_msg, ss_msg)
+conn_flag = 0
+
+
+def ChkConn():
+    global conn_flag
+    if CheckConns(pp_conn):
+        conn_flag |= 1
+
+    if CheckConns(ss_conn):
+        conn_flag |= 2
+
+ChkConn()
+
+pp_msg = "No complete Protected Site DB " +\
+         "Connection information provided."
+ss_msg = "No complete Secondary Site DB " +\
+         "Connection information provided."
+
+import sys
+
+if arg_result.site == "pp":
+    if not (conn_flag & 1):
+        print(pp_msg)
+        sys.exit()
+
+elif arg_result.site == "ss":
+    if not (conn_flag & 2):
+        print(pp_msg)
+        sys.exit()
 
 # -----------------------------------------------------------------
-from srm_db_tool.backup_tables_mgr.dbop import TableOp
+from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
+from srm_db_tool.backup_tables_mgr.tableop import TableOp
 
+
+sqlop = None
 tableOp = None
 
-if result.file == 'default':
-    tableOp = TableOp(a_default_path=SQLITE_DB_DIR)
+if arg_result.file == 'default':
+    sqlop = SqliteDbOp(a_path=SQLITE_DB_DIR)
+    tableOp = TableOp(sqlop)
 else:
-    tableOp = TableOp(a_dbfile=result.file, a_default_path=SQLITE_DB_DIR)
+    sqlop = SqliteDbOp(arg_result.file, SQLITE_DB_DIR)
+    tableOp = TableOp(sqlop)
 
 
 # -----------------------------------------------------------------
@@ -84,15 +139,17 @@ from srm_db_tool.modules.tools.recovery_plan.remove_recovery_plan\
     import RemoveRecoveryPlan
 
 
-rmrp = RemoveRecoveryPlan(pp_conn, ss_conn, tableOp)
+rmrp = RemoveRecoveryPlan(
+    pp_conn,
+    ss_conn,
+    tableOp,
+    arg_result.pr,
+    arg_result.kb,
+    arg_result.desc)
 
 
-if result.site == 'both':
-    rmrp(result.rp_name, a_site='pp')
-    rmrp(result.rp_name, a_site='ss')
+if arg_result.site == 'pp':
+    rmrp(arg_result.rp_name, a_site='pp')
 
-if result.site == 'pp':
-    rmrp(result.rp_name, a_site='pp')
-
-if result.site == 'ss':
-    rmrp(result.rp_name, a_site='ss')
+if arg_result.site == 'ss':
+    rmrp(arg_result.rp_name, a_site='ss')

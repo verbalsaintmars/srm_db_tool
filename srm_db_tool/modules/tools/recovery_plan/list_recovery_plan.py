@@ -1,7 +1,6 @@
 from srm_db_tool.formatter.layout import PrintResult
 
 from srm_db_tool.exception.predefined import GeneralException
-from srm_db_tool.exception.predefined import SaException
 
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
@@ -76,10 +75,10 @@ class ListRecoveryPlan(object):
         ss_result = this.ListSite('ss', a_name)
 
         if a_name is not None:
-            result = (1 if pp_result is not None else 0) &\
-                (1 if ss_result is not None else 0)
+            result = (True if pp_result is not None else False) &\
+                (True if ss_result is not None else False)
 
-            if result == 1:
+            if result:
 
                 if pp_result.peerplanmoid == ss_result.mo_id:
                     print("--Protected Site--")

@@ -16,8 +16,7 @@ parser = argparse.ArgumentParser(**ap_args)
 Table name arguement
 """
 pgname_args = {'type': str,
-               'help': "type in recovery plan name to show details "
-               "or 'all' to show all the recovery plans"}
+               'help': "type in Protection Group name to show the details."}
 
 parser.add_argument('pg_name', **pgname_args)
 

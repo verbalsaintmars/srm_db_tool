@@ -1,7 +1,6 @@
 from srm_db_tool.formatter.layout import PrintResult
 
 from srm_db_tool.exception.predefined import GeneralException
-from srm_db_tool.exception.predefined import SaException
 
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
@@ -80,10 +79,10 @@ class ListProtectionGroup(object):
                 (1 if ss_result is not None else 0)
 
             if result == 1:
-                 print("\n--Protected Site--")
-                 this.PrintResult(pp_result, a_name)
-                 print("\n--Recovery Site--")
-                 this.PrintResult(ss_result, a_name)
+                print("\n--Protected Site--")
+                this.PrintResult(pp_result, a_name)
+                print("\n--Recovery Site--")
+                this.PrintResult(ss_result, a_name)
             else:
                 if pp_result is None:
                     print(
@@ -96,12 +95,11 @@ class ListProtectionGroup(object):
                         format(a_name))
         else:
             if pp_result is not None:
-                 print("\n--Protected Site--")
-                 this.PrintResult(pp_result, a_name)
+                print("\n--Protected Site--")
+                this.PrintResult(pp_result, a_name)
             if ss_result is not None:
-                 print("\n--Recovery Site--")
-                 this.PrintResult(ss_result, a_name)
-            
+                print("\n--Recovery Site--")
+                this.PrintResult(ss_result, a_name)
             '''
             p_set = {p_res.peerplanmoid for p_res in pp_result}
             s_set = {s_res.mo_id for s_res in ss_result}

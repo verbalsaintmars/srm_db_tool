@@ -17,7 +17,7 @@ class PrintResult(object):
             if cnt != 0:
                 format_str += this.SPACER
 
-            format_str += "{" + str(cnt) + ":>25}"
+            format_str += "{" + str(cnt) + ":<38}"
 
         header_str = format_str.format(*a_name_list)
 

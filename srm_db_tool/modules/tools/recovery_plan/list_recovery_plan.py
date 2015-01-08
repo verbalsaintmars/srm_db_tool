@@ -58,7 +58,7 @@ class ListRecoveryPlan(object):
             print("\n\n")
             print("{:>25}: {:<25}".format("Recovery plan", a_name))
             this.formatter.PrintNameValue(a_result.__val_dict__())
-        elif a_result is not None:
+        elif a_result is not None and a_result.__len__() != 0:
             print("\n\n")
             name_list = a_result[0].keys()
             this.formatter.PrintValue(name_list, a_result)

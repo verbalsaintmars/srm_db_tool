@@ -341,7 +341,17 @@ class BaseDbOp(object):
 
     def GetDumpType(this):
         this._fetch_metadata()
-        return this.db_metadata.dumpType if this.db_metadata else None
+        dt_str = this.db_metadata.dumpType if this.db_metadata else None
+
+        if dt_str is None:
+            return None
+        else:
+            from srm_db_tool.backup_tables_mgr.dumptype import DumpType
+            if dt_str == 'all':
+                return DumpType.ALL
+            else:
+                DumpType.CUSTOMIZED.TYPE = dt_str
+                return DumpType.CUSTOMIZED
 
     def SetSite(this, a_site, a_force=False):
         if not a_site:

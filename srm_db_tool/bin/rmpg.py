@@ -2,6 +2,9 @@ import argparse
 from srm_db_tool.modules.tools.protection_group.argparse_parent \
     import version_parser as parent_parser
 
+from srm_db_tool.modules.tools.protection_group.verify \
+    import GetVerify
+
 ap_args = {'prog': 'rmpg',
            'description': 'Remove SRM protection groups',
            'epilog': 'Contact VMWare/CPD/SRM team for help.',
@@ -27,7 +30,9 @@ sqlite db file name
 dbfilename_args = {'type': str,
                    'nargs': '?',
                    'default': 'default',
-                   'help': "sqlite db file name or use default generated name"}
+                   'help': "sqlite db for backing"
+                   "up deleted protection group data."
+                   " If not provided, we'll generate one for you."}
 
 parser.add_argument('-f', '--file', **dbfilename_args)
 
@@ -102,21 +107,26 @@ def ChkConn():
 ChkConn()
 
 pp_msg = "No complete Protected Site DB " +\
-             "Connection information provided."
+         "Connection information provided."
 ss_msg = "No complete Secondary Site DB " +\
-             "Connection information provided."
+         "Connection information provided."
 
 import sys
+
+the_conn = None
 
 if arg_result.site == "pp":
     if not (conn_flag & 1):
         print(pp_msg)
         sys.exit()
+    the_conn = pp_conn
 
 elif arg_result.site == "ss":
     if not (conn_flag & 2):
         print(pp_msg)
         sys.exit()
+    the_conn = ss_conn
+
 
 # -----------------------------------------------------------------
 from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
@@ -133,6 +143,11 @@ else:
     sqlop = SqliteDbOp(arg_result.file, SQLITE_DB_DIR)
     tableOp = TableOp(sqlop)
 
+# -----------------------------------------------------------------
+"""
+Allow user to confirm the delete
+"""
+GetVerify()
 
 # -----------------------------------------------------------------
 from srm_db_tool.modules.tools.protection_group.remove_protection_group\
@@ -140,17 +155,10 @@ from srm_db_tool.modules.tools.protection_group.remove_protection_group\
 
 
 rmpg = RemoveProtectionGroup(
-    pp_conn,
-    ss_conn,
+    the_conn,
     tableOp,
     arg_result.pr,
     arg_result.kb,
     arg_result.desc)
 
-
-
-if arg_result.site == 'pp':
-    rmpg(arg_result.pg_name, a_site='pp')
-
-if arg_result.site == 'ss':
-    rmpg(arg_result.pg_name, a_site='ss')
+rmpg(arg_result.pg_name, a_site=arg_result.site)

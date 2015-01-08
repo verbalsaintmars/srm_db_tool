@@ -2,6 +2,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from srm_db_tool.modules.tools.backup_restore_tb.regex import \
     ms_pat_1, ms_pat_2
 import unicodedata
+from os import path, getcwd
 
 
 def BuildCache(a_conn, a_file):
@@ -20,9 +21,9 @@ def BuildCache(a_conn, a_file):
              for t in base.metadata.tables
              if ms_pat_1.search(t) is None if ms_pat_2.match(t) is None])
 
-    print("\n\nBuilding table cache file...\n\n")
+    print("\nBuilding table cache file...\n")
 
-    with open(a_file+'.py', 'w') as f:
+    with open(path.join(getcwd(), a_file)+'.py', 'w') as f:
         f.write('tables = {\n')
 
         for (offset, tn) in enumerate(table_name):

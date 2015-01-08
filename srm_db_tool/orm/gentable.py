@@ -1,6 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import PrimaryKeyConstraint
 from sqlalchemy import Table, MetaData
+from sqlalchemy.exc import NoSuchTableError
 
 
 def GenTable(a_table_name, a_engine=None, a_table=None, a_base=None):
@@ -8,11 +9,14 @@ def GenTable(a_table_name, a_engine=None, a_table=None, a_base=None):
     if a_table is not None:
         __table__ = a_table
     else:
-        if a_base is not None and a_base.metadata.is_bound():
-            __table__ = Table(a_table_name, a_base.metadata, autoload=True)
-        else:
-            __table__ = Table(a_table_name, MetaData(bind=a_engine),
-                              autoload=True)
+        try:
+            if a_base is not None and a_base.metadata.is_bound():
+                __table__ = Table(a_table_name, a_base.metadata, autoload=True)
+            else:
+                __table__ = Table(a_table_name, MetaData(bind=a_engine),
+                                  autoload=True)
+        except NoSuchTableError:
+            return None
 
     if __table__.primary_key.__len__() == 0:
         """

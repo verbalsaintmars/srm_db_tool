@@ -14,6 +14,9 @@ class DumpType(object):
         def __init__(this):
             this.dtype = "customized"
 
+        def __eq__(this, other):
+            return this.__dict__ == other.__dict__
+
         def SetType(this, a_msg):
             this.dtype = a_msg
 
@@ -26,8 +29,14 @@ class DumpType(object):
         TYPE = property(GetType, SetType)
 
     class ALL(object):
+        def __init__(this):
+            this.dtype = 'all'
+
+        def __eq__(this, other):
+            return this.__dict__ == other.__dict__
+
         def __str__(this):
-            return 'all'
+            return this.dtype
 
     ALL = ALL()
     CUSTOMIZED = CUSTOMIZED()

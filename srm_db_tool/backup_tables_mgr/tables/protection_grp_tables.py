@@ -43,6 +43,9 @@ file_tables = [
     "pdv_fileinfo",
     "pdv_directorylocator"]
 
+nfs_tables = [
+    "pds_nfsrecoveryspec"]
+
 other_tables = [
     "pds_protectedvm",
     "pds_datastore",
@@ -54,4 +57,5 @@ table_list.extend(protection_grp_tables)
 table_list.extend(protected_vm_tables)
 table_list.extend(device_tables)
 table_list.extend(file_tables)
+table_list.extend(nfs_tables)
 table_list.extend(other_tables)

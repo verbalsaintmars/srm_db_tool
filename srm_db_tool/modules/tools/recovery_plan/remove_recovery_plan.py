@@ -14,16 +14,14 @@ class RemoveRecoveryPlan(object):
 
     def __init__(
         this,
-        a_pp_conn,
-        a_ss_conn,
+        a_conn,
         a_tableop,
         a_pr=None,
         a_kb=None,
         a_desc=None,
             a_formatter=PrintResult()):
 
-        this.pp_conn = a_pp_conn
-        this.ss_conn = a_ss_conn
+        this.conn = a_conn
         this.formatter = a_formatter
         # this.tableop = TableOp()
         this.tableop = a_tableop
@@ -49,33 +47,20 @@ class RemoveRecoveryPlan(object):
             this.desc,
             False)
 
-    def Remove(this, a_datum, a_site):
-        session = None
-        if a_site == 'pp':
-            session = this.pp_conn.GetSession()
-        if a_site == 'ss':
-            session = this.ss_conn.GetSession()
+    def Remove(this, a_datum):
+        session = this.conn.GetSession()
         session.delete(a_datum)
         session.commit()
 
-    def CreateTableSessionPair(this, a_table_name, a_site='pp'):
-        session = None
-        table_c = None
-
-        if a_site == 'pp':
-            # GetSession cache's , thus no bad use
-            session = this.pp_conn.GetSession()
-            table_c = GenTable(a_table_name, this.pp_conn.GetEngine())
-
-        if a_site == 'ss':
-            session = this.ss_conn.GetSession()
-            table_c = GenTable(a_table_name, this.ss_conn.GetEngine())
+    def CreateTableSessionPair(this, a_table_name):
+        session = this.conn.GetSession()
+        table_c = GenTable(a_table_name, this.conn.GetEngine())
 
         return (table_c, session)
 
-    def List_pdr_planproperties(this, a_name, a_site):
+    def List_pdr_planproperties(this, a_name):
         pair = this.CreateTableSessionPair(
-            "pdr_planproperties", a_site)
+            "pdr_planproperties")
 
         this.pdr_planproperties_c = pair[0]
 
@@ -89,9 +74,9 @@ class RemoveRecoveryPlan(object):
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
             return None
 
-    def List_pdr_plancontents(this, a_db_id, a_site):
+    def List_pdr_plancontents(this, a_db_id):
         pair = this.CreateTableSessionPair(
-            "pdr_plancontents", a_site)
+            "pdr_plancontents")
 
         this.pdr_plancontents_c = pair[0]
 
@@ -105,9 +90,9 @@ class RemoveRecoveryPlan(object):
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
             return None
 
-    def Map_g_do_array(this, a_protectiongroups, a_site):
+    def Map_g_do_array(this, a_protectiongroups):
         pair = this.CreateTableSessionPair(
-            "g_do_array", a_site)
+            "g_do_array")
 
         try:
             result = pair[1].query(pair[0]).filter(
@@ -119,9 +104,9 @@ class RemoveRecoveryPlan(object):
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
             return None
 
-    def List_pdr_protectiongroupmap(this, a_list, a_site):
+    def List_pdr_protectiongroupmap(this, a_list):
         pair = this.CreateTableSessionPair(
-            "pdr_protectiongroupmap", a_site)
+            "pdr_protectiongroupmap")
 
         this.pdr_protectiongroupmap_c = pair[0]
 
@@ -144,21 +129,26 @@ class RemoveRecoveryPlan(object):
             print("Please enter the Recover Plan we want to remove...")
             return
 
-        version = None
+        from srm_db_tool.backup_tables_mgr.dumptype import DumpType
 
-        if a_site == 'pp':
-            version = GetSrmVersion(this.pp_conn, 'pp')[1]
-        if a_site == 'ss':
-            version = GetSrmVersion(this.ss_conn, 'ss')[1]
+        sqlop = GeneralDbOp(a_conn=this.conn, a_create_meta_table=False)
 
-        pdr_pp = this.List_pdr_planproperties(a_name, a_site)
+        if sqlop.DUMPTYPE is not None and\
+           sqlop.DUMPTYPE != DumpType.ALL and\
+           sqlop.DUMPTYPE.TYPE != 'rp':
+            print("Dumped database does not contain Recovery Plan tables.")
+            return
+
+        version = GetSrmVersion(this.conn, a_site)[1]
+
+        pdr_pp = this.List_pdr_planproperties(a_name)
         if pdr_pp is None:
             print("Recovery Plan : {} does not exist inside the database".
                   format(a_name))
             return
 
         # print(pdr_pp.contents)
-        pdr_pc = this.List_pdr_plancontents(pdr_pp.contents, a_site)
+        pdr_pc = this.List_pdr_plancontents(pdr_pp.contents)
         if pdr_pc is None:
             print("Recovery Plan : {} : pdr_plancontents does not has"
                   " pdr_planproperties.contents' reference".
@@ -167,7 +157,7 @@ class RemoveRecoveryPlan(object):
 
         # print(pdr_pc.protectiongroups)
         pdr_go_do_array_list =\
-            this.Map_g_do_array(pdr_pc.protectiongroups, a_site)
+            this.Map_g_do_array(pdr_pc.protectiongroups)
 
         if pdr_go_do_array_list is None or pdr_go_do_array_list.__len__() == 0:
             print("Oh oh~, "
@@ -178,8 +168,7 @@ class RemoveRecoveryPlan(object):
 
         # print(pdr_go_do_array.db_id)
         pdr_pg_list = this.List_pdr_protectiongroupmap(
-            pdr_go_do_array_list,
-            a_site)
+            pdr_go_do_array_list)
         # print(pdr_pg.localgroupmoid)
 
         # backup
@@ -201,19 +190,17 @@ class RemoveRecoveryPlan(object):
         except Exception as e:
             print(MODULE_EXCEPT_FORMAT.format(__name__, e))
         else:
-            this.Remove(pdr_pp, a_site)
-            this.Remove(pdr_pc, a_site)
+            this.Remove(pdr_pp)
+            this.Remove(pdr_pc)
             for pdr_pg in pdr_pg_list:
-                this.Remove(pdr_pg, a_site)
+                this.Remove(pdr_pg)
             """
             Insert into srm_meta_table_fixby table if possible
             """
             gdbop = None
 
-            if a_site == 'pp':
-                gdbop = GeneralDbOp(this.pp_conn)
-            if a_site == 'ss':
-                gdbop = GeneralDbOp(this.ss_conn)
+            gdbop = GeneralDbOp(this.conn)
+
             if gdbop.LOCK:
                 gdbop.LOCK = 0
 

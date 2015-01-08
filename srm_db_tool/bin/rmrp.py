@@ -2,6 +2,9 @@ import argparse
 from srm_db_tool.modules.tools.recovery_plan.argparse_parent \
     import version_parser as parent_parser
 
+from srm_db_tool.modules.tools.recovery_plan.verify \
+    import GetVerify
+
 ap_args = {'prog': 'rmrp',
            'description': 'Remove SRM recovery plans',
            'epilog': 'Contact VMWare/CPD/SRM team for help.',
@@ -108,15 +111,19 @@ ss_msg = "No complete Secondary Site DB " +\
 
 import sys
 
+the_conn = None
+
 if arg_result.site == "pp":
     if not (conn_flag & 1):
         print(pp_msg)
         sys.exit()
+    the_conn = pp_conn
 
 elif arg_result.site == "ss":
     if not (conn_flag & 2):
         print(pp_msg)
         sys.exit()
+    the_conn = ss_conn
 
 # -----------------------------------------------------------------
 from srm_db_tool.backup_tables_mgr.sqlitedbop import SqliteDbOp
@@ -134,22 +141,22 @@ else:
     tableOp = TableOp(sqlop)
 
 
+"""
+Allow user to confirm the delete
+"""
+GetVerify()
+
 # -----------------------------------------------------------------
 from srm_db_tool.modules.tools.recovery_plan.remove_recovery_plan\
     import RemoveRecoveryPlan
 
 
 rmrp = RemoveRecoveryPlan(
-    pp_conn,
-    ss_conn,
+    the_conn,
     tableOp,
     arg_result.pr,
     arg_result.kb,
     arg_result.desc)
 
 
-if arg_result.site == 'pp':
-    rmrp(arg_result.rp_name, a_site='pp')
-
-if arg_result.site == 'ss':
-    rmrp(arg_result.rp_name, a_site='ss')
+rmrp(arg_result.rp_name, a_site=arg_result.site)
